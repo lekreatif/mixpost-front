@@ -9,6 +9,7 @@ import {
 } from '../hooks/useApi'
 import { useNotification } from '../contexts/NotificationContext'
 import Header from '../components/Header'
+import { SocialAccount } from '@/types'
 
 interface FacebookPage {
   id: string
@@ -17,53 +18,18 @@ interface FacebookPage {
 }
 
 const SocialPagesPage: React.FC = () => {
-  const location = useLocation()
-  const navigate = useNavigate()
   const { addNotification } = useNotification()
 
   const { data: user } = useUser()
   const { data: socialAccounts, isLoading, error } = useSocialAccounts()
-  const { data: authUrl } = useFacebookAuthUrl()
   const { data: facebookPages } = useFacebookPages()
   const { mutateAsync: addFacebookPage } = useAddFacebookPage()
 
-  useEffect(() => {
-    checkAuthStatus()
-  }, [])
+  
 
-  const checkAuthStatus = () => {
-    const params = new URLSearchParams(location.search)
-    const authStatus = params.get('auth')
-    const errorMessage = params.get('message')
-
-    if (authStatus === 'success') {
-      addNotification('success', 'Authentification Facebook réussie')
-      navigate('/social-pages', { replace: true })
-    } else if (authStatus === 'error') {
-      addNotification('error', `Erreur d'authentification: ${errorMessage}`)
-      navigate('/social-pages', { replace: true })
-    }
+  const handleGetFacebookPages = async (accountId: string) => {
+  console.log(facebookPages)
   }
-
-  const handleConnectFacebook = async () => {
-    const link = document.createElement('a')
-    link.href = authUrl as string
-    link.target = '_self'
-    link.click()
-  }
-
-  const handleAddFacebookPage = async (page: FacebookPage) => {
-    if (!user) {
-      addNotification('error', 'Utilisateur non connecté')
-      return
-    }
-
-    await addFacebookPage()
-
-    addNotification('success', `La page ${page.name} a été ajoutée avec succès`)
-  }
-
-  const handleGetFacebookPages = async (accountId: string) => {}
 
   if (isLoading) return <div>Chargement...</div>
   if (error) return <div>Erreur : {error.message}</div>
@@ -80,19 +46,19 @@ const SocialPagesPage: React.FC = () => {
           <h2 className="mb-4 text-xl font-semibold">
             Comptes sociaux connectés
           </h2>
-          {socialAccounts?.map((account: any) => (
+          {socialAccounts?.map((account: SocialAccount) => (
             <div key={account.id} className="mb-4 rounded border p-4">
               <h3 className="font-semibold">{account.platform}</h3>
               {account.accessToken ? (
                 <button
-                  onClick={() => handleGetFacebookPages(account.id)}
+                  onClick={() => handleGetFacebookPages(account.id + '')}
                   className="mt-2 rounded bg-blue-500 px-4 py-2 text-white"
                 >
                   Récupérer les pages
                 </button>
               ) : (
                 <button
-                  onClick={() => handleConnectFacebook(account.id)}
+                  onClick={() => {}}
                   className="mt-2 rounded bg-green-500 px-4 py-2 text-white"
                 >
                   Connecter le compte
@@ -115,7 +81,7 @@ const SocialPagesPage: React.FC = () => {
                 >
                   <span>{page.name}</span>
                   <button
-                    onClick={() => handleAddFacebookPage(page)}
+                    onClick={()=>{}}
                     className="rounded bg-green-500 px-4 py-2 text-white"
                   >
                     Ajouter

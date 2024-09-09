@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from 'axios'
-import { IUser } from '@/types'
+import { IUser, SocialAccount } from '@/types'
 
 
 const API_URL = '/api'
@@ -30,7 +30,7 @@ export const getFacebookAuthUrl = async (): Promise<string> => {
 }
 
 export const getFacebookPages = async () => {
-  const response = await api.get('/facebook/pages')
+  const response = await api.get('/pages')
   return response.data
 }
 
@@ -39,7 +39,7 @@ export const addFacebookPage = async (pageId: string) => {
 }
 
 export const getSocialAccounts = async () => {
-  const response = await api.get('/social/accounts')
+  const response = await api.get('/social-accounts')
   return response.data
 }
 
@@ -47,4 +47,10 @@ export const refreshAccessToken = async (): Promise<void> => {
   await api.post('/auth/refresh')
 }
 
+export const createSocialAccount = async (data:SocialAccount)=> api.post('/social-accounts', {...data})
+
+export const updateSocialAccount = async (accountData: SocialAccount):Promise<SocialAccount> => {
+  const response = await api.put(`/social-accounts/${accountData.id}`, accountData)
+    return response.data as SocialAccount
+}
 export default api

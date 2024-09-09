@@ -1,78 +1,56 @@
-import React from 'react';
-import { z } from 'zod';
-import { useAdmin } from '../hooks/useAdmin';
-import { usePages } from '../hooks/usePages';
-import { useFormValidation } from '../hooks/useFormValidation';
-import { useNotification } from '../contexts/NotificationContext';
-import Header from '../components/Header';
+import React, { useState, useEffect } from 'react';
+import { useAdmin } from '@/hooks/useAdmin';
+import Header from '@/components/Header';
+import { SocialAccount, Page } from '../types';
+import { FaPlus } from 'react-icons/fa';
 
-const pageSchema = z.object({
-  pageId: z.string().min(1, 'L\'ID de la page est requis'),
-  name: z.string().min(1, 'Le nom de la page est requis'),
-  accessToken: z.string().min(1, 'Le token d\'accès est requis'),
-});
+const AdminPage: React.FC = () => {
+  const { 
+    getSocialAccounts, 
+    isLoading, 
+    error, 
+    socialAccounts,
+    getFacebookAuthUrl,
+    getFacebookPages,
+    addFacebookPage
+  } = useAdmin();
+  
+  const [pages, setPages] = useState<Page[]>([]);
+  const [isAddingPage, setIsAddingPage] = useState(false);
 
-const assignmentSchema = z.object({
-  pageId: z.string().min(1, 'Veuillez sélectionner une page'),
-  userId: z.string().min(1, 'Veuillez sélectionner un utilisateur'),
-});
+  useEffect(() => {
+    getSocialAccounts.mutateAsync();
+  }, []);
 
-const AdminPage = () => {
-  const { users, fetchUsers, addFacebookPage, assignPageToUser, isLoading, error } = useAdmin();
-  const { pages, isLoading: isPagesLoading, error: pagesError } = usePages();
-  const { addNotification } = useNotification();
+  const handleAddPage = () => {
+    setIsAddingPage(true);
+  };
 
-  const {
-    values: newPage,
-    handleChange: handleNewPageChange,
-    errors: newPageErrors,
-    validate: validateNewPage,
-    setValues: setNewPageValues,
-  } = useFormValidation(pageSchema);
-
-  const {
-    values: assignment,
-    handleChange: handleAssignmentChange,
-    errors: assignmentErrors,
-    validate: validateAssignment,
-    setValues: setAssignmentValues,
-  } = useFormValidation(assignmentSchema);
-
-  React.useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
-
-  const handleAddPage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (await validateNewPage()) {
-      try {
-        await addFacebookPage(newPage.pageId, newPage.name, newPage.accessToken);
-        addNotification('success', 'Page Facebook ajoutée avec succès');
-        setNewPageValues({ pageId: '', name: '', accessToken: '' });
-      } catch (err) {
-        addNotification('error', 'Erreur lors de l\'ajout de la page Facebook');
-      }
+  const handleSelectAccount = async (accountId: number) => {
+    try {
+      const authUrl = await getFacebookAuthUrl(accountId.toString());
+      window.location.href = authUrl;
+    } catch (err) {
+      console.error("Erreur lors de la récupération de l'URL d'authentification:", err);
     }
   };
 
-  const handleAssignPage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (await validateAssignment()) {
-      try {
-        await assignPageToUser(Number(assignment.pageId), Number(assignment.userId));
-        addNotification('success', 'Page assignée avec succès');
-        setAssignmentValues({ pageId: '', userId: '' });
-      } catch (err) {
-        addNotification('error', 'Erreur lors de l\'assignation de la page');
+  // Cette fonction sera appelée après le retour de l'authentification OAuth
+  const handleOAuthCallback = async (code: string, accountId: string) => {
+    try {
+      const newPages = await getFacebookPages(accountId);
+      setPages(newPages);
+      for (const page of newPages) {
+        await addFacebookPage(page.id, page.name, page.access_token);
       }
+      setIsAddingPage(false);
+    } catch (err) {
+      console.error("Erreur lors de la récupération ou de l'ajout des pages:", err);
     }
   };
 
-  if (isLoading || isPagesLoading) return <div>Chargement...</div>;
-  if (error || pagesError) {
-    addNotification('error', error || pagesError || 'Une erreur est survenue');
-    return null;
-  }
+  if (isLoading) return <div className="flex justify-center items-center h-screen">Chargement...</div>;
+  if (error) return <div className="text-red-500 text-center">Erreur : {error}</div>;
 
   return (
     <>
@@ -81,86 +59,39 @@ const AdminPage = () => {
         <h1 className="mb-6 text-3xl font-bold text-gray-900">Administration</h1>
         
         <div className="p-6 mb-6 overflow-hidden bg-white shadow sm:rounded-lg">
-          <h2 className="mb-4 text-xl font-semibold">Ajouter une nouvelle page Facebook</h2>
-          <form onSubmit={handleAddPage} className="space-y-4">
-            <div>
-              <input
-                type="text"
-                name="pageId"
-                placeholder="ID de la page"
-                value={newPage.pageId || ''}
-                onChange={handleNewPageChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
-              {newPageErrors.pageId && <p className="mt-1 text-sm text-red-500">{newPageErrors.pageId}</p>}
-            </div>
-            <div>
-              <input
-                type="text"
-                name="name"
-                placeholder="Nom de la page"
-                value={newPage.name || ''}
-                onChange={handleNewPageChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
-              {newPageErrors.name && <p className="mt-1 text-sm text-red-500">{newPageErrors.name}</p>}
-            </div>
-            <div>
-              <input
-                type="text"
-                name="accessToken"
-                placeholder="Token d'accès"
-                value={newPage.accessToken || ''}
-                onChange={handleNewPageChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
-              {newPageErrors.accessToken && <p className="mt-1 text-sm text-red-500">{newPageErrors.accessToken}</p>}
-            </div>
-            <button type="submit" className="px-4 py-2 text-white bg-blue-500 rounded-md">
-              Ajouter la page
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">Pages Facebook</h2>
+            <button 
+              onClick={handleAddPage}
+              className="px-4 py-2 text-sm text-white bg-green-500 rounded-full hover:bg-green-600 flex items-center"
+            >
+              <FaPlus className="mr-2" /> Ajouter une page
             </button>
-          </form>
-        </div>
+          </div>
 
-        <div className="p-6 overflow-hidden bg-white shadow sm:rounded-lg">
-          <h2 className="mb-4 text-xl font-semibold">Assigner une page à un utilisateur</h2>
-          <form onSubmit={handleAssignPage} className="space-y-4">
-            <div>
-              <select
-                name="pageId"
-                value={assignment.pageId || ''}
-                onChange={handleAssignmentChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              >
-                <option value="">Sélectionnez une page</option>
-                {pages.map((page) => (
-                  <option key={page.id} value={page.id}>
-                    {page.name}
-                  </option>
-                ))}
-              </select>
-              {assignmentErrors.pageId && <p className="mt-1 text-sm text-red-500">{assignmentErrors.pageId}</p>}
+          {isAddingPage && (
+            <div className="mt-4">
+              <h3 className="text-lg font-semibold mb-2">Sélectionnez un compte social :</h3>
+              {socialAccounts.map((account: SocialAccount) => (
+                <button
+                  key={account.id}
+                  onClick={() => handleSelectAccount(account.id)}
+                  className="mr-2 mb-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                  {account.platform}
+                </button>
+              ))}
             </div>
-            <div>
-              <select
-                name="userId"
-                value={assignment.userId || ''}
-                onChange={handleAssignmentChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              >
-                <option value="">Sélectionnez un utilisateur</option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.email}
-                  </option>
-                ))}
-              </select>
-              {assignmentErrors.userId && <p className="mt-1 text-sm text-red-500">{assignmentErrors.userId}</p>}
-            </div>
-            <button type="submit" className="px-4 py-2 text-white bg-green-500 rounded-md">
-              Assigner la page
-            </button>
-          </form>
+          )}
+
+          <div className="mt-4">
+            <h3 className="text-lg font-semibold mb-2">Pages Facebook :</h3>
+            {pages.map((page) => (
+              <div key={page.id} className="mb-2 p-2 border rounded">
+                {page.name}
+              </div>
+            ))}
+          </div>
         </div>
       </main>
     </>

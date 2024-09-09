@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
+import React from 'react'
+import { Navigate, useLocation} from 'react-router-dom'
 import { USER_ROLE } from '../types'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -8,14 +8,8 @@ interface SuperAdminRouteProps {
 }
 
 const IsSuperAdminRoute: React.FC<SuperAdminRouteProps> = ({ children }) => {
-  const { user, isAuthenticated, isLoading, checkAuth } = useAuth()
+  const { user, isAuthenticated, isLoading } = useAuth()
   const location = useLocation()
-
-  useEffect(() => {
-    if (!isAuthenticated && !isLoading) {
-      checkAuth()
-    }
-  }, [isAuthenticated, isLoading, checkAuth])
 
   if (isLoading) {
     return <div>Chargement...</div>
