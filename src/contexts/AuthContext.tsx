@@ -1,95 +1,95 @@
-import {
-  createContext,
-  ReactNode,
-  useCallback,
-  useEffect,
-  useState,
-} from 'react'
-
-import { login, getMe, api, refreshAccessToken } from '../services/api'
+import { createContext, ReactNode, useCallback, useState, useEffect } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { login as loginApi, logout as logoutApi, refreshAccessToken, getUser } from '../services/api'
 import { IUser } from '@/types'
 
+interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
 interface AuthContextType {
-  accessToken: string | null
   isLoading: boolean
   error: string | null
-  setAccessToken: (token: string | null) => void
-  setIsLoading: (isLoading: boolean) => void
-  setError: (error: string) => void
   user: IUser | null
-  setUser: (user: IUser) => void
-  login: (email: string, password: string) => void
-  logout: () => void
+  isAuthenticated: boolean
+  login: (email: string, password: string) => Promise<void>
+  logout: () => Promise<void>
+  checkAuth: () => Promise<void>
 }
 
 export const AuthContext = createContext({} as AuthContextType)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const queryClient = useQueryClient()
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [user, setUser] = useState<IUser | null>(null)
-  const [accessToken, setAccessToken] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
 
-  const handleSetUser = (user: IUser) => setUser(user)
-  const handleAccessToken = (accessToken: string | null) =>
-    setAccessToken(accessToken)
-  const handleIsLoading = (isLoading: boolean) => setIsLoading(isLoading)
-  const handleError = (error: string) => setError(error)
+  const loginMutation = useMutation({
+    mutationFn: (credentials: LoginCredentials) => loginApi(credentials.email, credentials.password),
+    onSuccess: () => {
+      setIsAuthenticated(true)
+      setError(null)
+      queryClient.invalidateQueries({ queryKey: ['user'] })
+    },
+    onError: () => {
+      setError('Erreur de connexion')
+      setIsAuthenticated(false)
+    },
+  })
 
-  const handleLogin = async (email: string, password: string) => {
-    setIsLoading(true)
-    setError('')
+  const logoutMutation = useMutation({
+    mutationFn: logoutApi,
+    onSuccess: () => {
+      setIsAuthenticated(false)
+      setUser(null)
+      queryClient.clear()
+    },
+    onError: () => {
+      setError('Erreur lors de la déconnexion')
+    },
+  })
+
+  const checkAuth = useCallback(async () => {
     try {
-      const response = await login(email, password)
-      const { accessToken } = response.data
-      setAccessToken(accessToken)
-      api.interceptors.request.use((config) => {
-        config.headers.Authorization = `Bearer ${accessToken}`
-        return config
-      })
-      const me = (await getMe()).data
-      setUser(me)
-    } catch (error: unknown) {
-      setError('Erreur de connexion. Veuillez vérifier vos identifiants.')
-      console.error(error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleLogout = () => {
-    setAccessToken(null)
-    setUser(null)
-  }
-
-  const handleRefreshAccessToken = useCallback(async () => {
-    setIsLoading(true)
-    setError('')
-
-    try {
-      const response = await refreshAccessToken()
-      const { accessToken } = response.data
-      setAccessToken(accessToken)
-      api.interceptors.request.use((config) => {
-        config.headers.Authorization = `Bearer ${accessToken}`
-        return config
-      })
-      if (!user) {
-        const me = (await getMe()).data
-        setUser(me)
-      }
-    } catch (error: unknown) {
-      setError('Erreur de connexion. Veuillez vérifier vous reconnecter.')
-      console.error(error)
-      // handleLogout()
+      await refreshAccessToken()
+      const userData = await getUser()
+      setUser(userData.data as unknown as IUser)
+      setIsAuthenticated(true)
+      setError(null)
+    } catch (err) {
+      setIsAuthenticated(false)
+      setUser(null)
+      setError('Session expirée')
     } finally {
       setIsLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    if (!accessToken) handleRefreshAccessToken()
-  }, [])
+    checkAuth()
+  }, [checkAuth])
+
+  const handleLogin = useCallback(async (email: string, password: string) => {
+    setIsLoading(true)
+    try {
+      await loginMutation.mutateAsync({ email, password })
+      await checkAuth()
+    } finally {
+      setIsLoading(false)
+    }
+  }, [loginMutation, checkAuth])
+
+  const handleLogout = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      await logoutMutation.mutateAsync()
+    } finally {
+      setIsLoading(false)
+    }
+  }, [logoutMutation])
 
   return (
     <AuthContext.Provider
@@ -97,13 +97,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         user,
         isLoading,
         error,
-        accessToken,
-        setUser: handleSetUser,
-        setAccessToken: handleAccessToken,
-        setIsLoading: handleIsLoading,
-        setError: handleError,
+        isAuthenticated,
         login: handleLogin,
         logout: handleLogout,
+        checkAuth,
       }}
     >
       {children}

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
-  useMe,
+  useUser,
   useSocialAccounts,
   useFacebookAuthUrl,
   useFacebookPages,
@@ -21,7 +21,7 @@ const SocialPagesPage: React.FC = () => {
   const navigate = useNavigate()
   const { addNotification } = useNotification()
 
-  const { data: user } = useMe()
+  const { data: user } = useUser()
   const { data: socialAccounts, isLoading, error } = useSocialAccounts()
   const { data: authUrl } = useFacebookAuthUrl()
   const { data: facebookPages } = useFacebookPages()

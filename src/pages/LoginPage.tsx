@@ -1,25 +1,24 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 const LoginPage = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const { login, isLoading, error, accessToken } = useAuth()
+  const { login, isLoading, error, isAuthenticated } = useAuth()
 
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    login(email, password)
-  }
   useEffect(() => {
-    if (accessToken && !isLoading) {
-      navigate('/', { replace: true })
+    if (isAuthenticated) {
+      const { from } = location.state || { from: { pathname: '/' } }
+      navigate(from, { replace: true })
     }
-  }, [accessToken, isLoading])
+  }, [isAuthenticated, navigate, location])
 
-  if (accessToken && !isLoading) {
-    return <>Connected</>
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await login(email, password)
   }
 
   return (
@@ -32,7 +31,6 @@ const LoginPage = () => {
         </div>
         <form className="mt-8 space-y-6" onSubmit={onSubmit}>
           {error && <div className="text-red-500">{error}</div>}
-          <input type="hidden" name="remember" defaultValue="true" />
           <div className="-space-y-px rounded-md shadow-sm">
             <div>
               <label htmlFor="email-address" className="sr-only">

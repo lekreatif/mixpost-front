@@ -1,21 +1,31 @@
-import React, { useMemo } from 'react'
-import { Navigate } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { Navigate, useLocation } from 'react-router-dom'
 import { USER_ROLE } from '../types'
-import { useMe } from '@/hooks/useApi'
+import { useAuth } from '@/hooks/useAuth'
 
-interface AdminRouteProps {
+interface SuperAdminRouteProps {
   children: React.ReactNode
 }
 
-const IsSuperAdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
-  const user = useMe().data
+const IsSuperAdminRoute: React.FC<SuperAdminRouteProps> = ({ children }) => {
+  const { user, isAuthenticated, isLoading, checkAuth } = useAuth()
+  const location = useLocation()
 
-  const isSuperAdmin = useMemo(
-    () => user && user.role === USER_ROLE.SUPER_ADMIN,
-    [user]
-  )
+  useEffect(() => {
+    if (!isAuthenticated && !isLoading) {
+      checkAuth()
+    }
+  }, [isAuthenticated, isLoading, checkAuth])
 
-  if (!isSuperAdmin) {
+  if (isLoading) {
+    return <div>Chargement...</div>
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />
+  }
+
+  if (user && user.role !== USER_ROLE.SUPER_ADMIN) {
     return <Navigate to="/" replace />
   }
 

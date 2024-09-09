@@ -2,14 +2,14 @@ import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { USER_ROLE } from '@/types'
-import { useMe } from '@/hooks/useApi'
 
 const Header = () => {
   const { logout } = useAuth()
-  const user = useMe().data
+  const {user} = useAuth()
 
   const isSuperAdmin = useMemo(
-    () => user?.role === USER_ROLE.SUPER_ADMIN,
+    () =>  user?.role === USER_ROLE.SUPER_ADMIN
+    ,
     [user]
   )
 

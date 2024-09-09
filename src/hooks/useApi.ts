@@ -1,53 +1,46 @@
 import { useQuery, useMutation } from '@tanstack/react-query'
+import { getUser, getSocialAccounts, getFacebookAuthUrl, getFacebookPages, addFacebookPage } from '../services/api'
+import { useAuth } from './useAuth'
 
-import {
-  getFacebookAuthUrl,
-  getFacebookPages,
-  addFacebookPage,
-  getSocialAccounts,
-  getMe,
-  getMyPages,
-} from '../services/api'
-import { IUser } from '../types'
-
-export const useMe = () => {
-  return useQuery<IUser>({
-    queryKey: ['me'],
-    queryFn: async () => {
-      const { data } = await getMe()
-      return data as IUser
-    },
-  })
-}
-
-export const useMyPages = () => {
+export const useUser = () => {
+  const { isAuthenticated } = useAuth()
   return useQuery({
-    queryKey: ['myPages'],
-    queryFn: () => getMyPages(),
+    queryKey: ['user'], 
+    queryFn: getUser, 
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: false,
   })
 }
 
 export const useSocialAccounts = () => {
+  const { isAuthenticated } = useAuth()
   return useQuery({
     queryKey: ['socialAccounts'],
-    queryFn: () => getSocialAccounts(),
+    queryFn: getSocialAccounts,
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000,
   })
 }
 
 export const useFacebookAuthUrl = () => {
   return useQuery({
     queryKey: ['facebookAuthUrl'],
-    queryFn: () => getFacebookAuthUrl(),
+    queryFn: getFacebookAuthUrl,
+    staleTime: Infinity,
   })
 }
 
 export const useFacebookPages = () => {
+  const { isAuthenticated } = useAuth()
   return useQuery({
     queryKey: ['facebookPages'],
-    queryFn: () => getFacebookPages(),
+    queryFn: getFacebookPages,
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000,
   })
 }
 
 export const useAddFacebookPage = () => {
-  return useMutation({ mutationFn: addFacebookPage })
+  return useMutation(addFacebookPage)
 }
