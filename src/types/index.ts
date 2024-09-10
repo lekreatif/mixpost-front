@@ -8,6 +8,8 @@ export interface Page {
   name: string
   pageId: string
   profilePicture: string
+  users: { userId: number }[]
+  profilePictureUrl: string
 }
 
 export interface IUser {
@@ -17,13 +19,13 @@ export interface IUser {
 }
 
 export interface SocialAccount {
-  id: number;
-  platform: string;
-  appClientId: string;
-  appClientSecret: string;
-  accessToken?: string;
-  tokenExpiresAt?: Date;
-  createdAt: Date;
+  id: number
+  platform: SocialPlatform
+  appClientId: string
+  appClientSecret: string
+  accessToken?: string
+  tokenExpiresAt?: Date
+  createdAt: Date
 }
 
 export enum SocialPlatform {

@@ -1,7 +1,6 @@
 import axios, { AxiosResponse } from 'axios'
 import { IUser, SocialAccount } from '@/types'
 
-
 const API_URL = '/api'
 
 export const api = axios.create({
@@ -29,8 +28,13 @@ export const getFacebookAuthUrl = async (): Promise<string> => {
   return response.data.url
 }
 
-export const getFacebookPages = async () => {
+export const getAdminFacebookPages = async () => {
   const response = await api.get('/pages')
+  return response.data
+}
+
+export const getUserFacebookPages = async () => {
+  const response = await api.get('/pages/my-pages')
   return response.data
 }
 
@@ -47,10 +51,27 @@ export const refreshAccessToken = async (): Promise<void> => {
   await api.post('/auth/refresh')
 }
 
-export const createSocialAccount = async (data:SocialAccount)=> api.post('/social-accounts', {...data})
+export const createSocialAccount = async (data: SocialAccount) =>
+  api.post('/social-accounts', { ...data })
 
-export const updateSocialAccount = async (accountData: SocialAccount):Promise<SocialAccount> => {
-  const response = await api.put(`/social-accounts/${accountData.id}`, accountData)
-    return response.data as SocialAccount
+export const updateSocialAccount = async (
+  accountData: SocialAccount
+): Promise<SocialAccount> => {
+  const response = await api.put(
+    `/social-accounts/${accountData.id}`,
+    accountData
+  )
+  return response.data as SocialAccount
 }
+
+export const createUser = async (data: IUser) => api.post('/users', { ...data })
+export const updateUser = async (data: IUser) =>
+  api.put(`/users/${data.email}`, data)
+export const deleteUser = async (userId: number) =>
+  api.delete(`/users/${userId}`)
+export const getUsers = async () => api.get('/users')
+
+export const assignUsersToPage = async (pageId: string, userIds: number[]) =>
+  api.post(`/pages/assign-users`, { pageId, userIds })
+
 export default api

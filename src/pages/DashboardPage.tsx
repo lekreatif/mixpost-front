@@ -1,40 +1,42 @@
-
-import { usePages } from '../hooks/usePages';
-import Header from '../components/Header';
+import { useFacebookPages } from '@/hooks/useApi'
+import Header from '../components/Header'
+import { Page } from '@/types'
+import { Checkbox, Field } from '@headlessui/react'
 
 const DashboardPage = () => {
-  const { pages, isLoading, error } = usePages();
+  const { data: pages, isLoading, error } = useFacebookPages()
 
-  if (isLoading) return <div>Chargement...</div>;
-  if (error) return <div>Erreur : {error}</div>;
+  if (isLoading) return <div>Chargement...</div>
+  if (error) return <div>Erreur : {error.message}</div>
 
   return (
     <>
       <Header />
       <main className="py-6 mx-auto max-w-7xl sm:px-6 lg:px-8">
-        <h1 className="mb-6 text-3xl font-bold text-gray-900">Tableau de bord</h1>
-        <div className="overflow-hidden bg-white shadow sm:rounded-lg">
-          <div className="px-4 py-5 sm:px-6">
-            <h2 className="text-lg font-medium leading-6 text-gray-900">Vos pages Facebook</h2>
-          </div>
-          <ul className="divide-y divide-gray-200">
-            {pages.map((page) => (
-              <li key={page.id} className="px-4 py-4 sm:px-6">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium text-indigo-600 truncate">{page.name}</p>
-                  <div className="flex flex-shrink-0 ml-2">
-                    <p className="inline-flex px-2 text-xs font-semibold leading-5 text-green-800 bg-green-100 rounded-full">
-                      ID: {page.pageId}
-                    </p>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
+        <div className="">
+          {isLoading ? (
+            <div className="py-4 text-center">
+              <div className="w-12 h-12 mx-auto border-b-2 border-indigo-500 rounded-full animate-spin"></div>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {pages.map((page: Page) => (
+                <Field key={page.name}>
+                  <Checkbox className="inline-block aspect-square w-14 cursor-pointer rounded-full border-2 border-indigo-300 data-[checked]:border-indigo-600">
+                    <img
+                      className="pointer-events-none aspect-square w-full touch-none rounded-full object-cover object-center opacity-75 group-data-[checked]:opacity-100"
+                      src={page.profilePictureUrl}
+                      alt={page.name}
+                    />
+                  </Checkbox>
+                </Field>
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </>
-  );
-};
+  )
+}
 
-export default DashboardPage;
+export default DashboardPage

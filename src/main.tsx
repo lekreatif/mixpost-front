@@ -6,9 +6,9 @@ import App from './App'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <QueryClientProvider client={queryClient}>
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
       <App />
     </QueryClientProvider>
-    // <React.StrictMode>
-  // </React.StrictMode>
+  </React.StrictMode>
 )

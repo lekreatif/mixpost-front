@@ -1,79 +1,196 @@
-import React, { useState, useEffect } from 'react';
-import { useAdmin } from '@/hooks/useAdmin';
-import Header from '@/components/Header';
-import { SocialAccount } from '../types';
-import { Tab, TabList, TabPanel, TabPanels, TabGroup } from '@headlessui/react';
-import SocialAccountsList from '@/components/SocialAccountsList';
-import SocialAccountForm from '@/components/SocialAccountForm';
-import ConnectedPagesList from '@/components/ConnectedPagesList';
-import { useFacebookPages } from '@/hooks/useApi';
-import { FaPlus, FaFacebookF, FaInstagram, FaTwitter } from 'react-icons/fa';
-import Modal from '@/components/Modal';
+import React, { useState, useEffect, useMemo } from 'react'
+import { useAdmin } from '@/hooks/useAdmin'
+import Header from '@/components/Header'
+import { SocialAccount, IUser } from '@/types'
+import {
+  Tab,
+  TabList,
+  TabPanel,
+  TabPanels,
+  TabGroup,
+  Button,
+} from '@headlessui/react'
+import SocialAccountsList from '@/components/SocialAccountsList'
+import SocialAccountForm from '@/components/SocialAccountForm'
+import ConnectedPagesList from '@/components/ConnectedPagesList'
+import { useFacebookPages } from '@/hooks/useApi'
+import { FaPlus, FaFacebookF } from 'react-icons/fa'
+import { AxiosResponse } from 'axios'
+import PageDetailsModal from '@/components/PageDetailsModal'
+import { Page } from '@/types'
+
+import UsersList from '@/components/UsersList'
+import UserForm from '@/components/UserForm'
+
+import Modal from '@/components/Modal'
+
+enum E_MODAL_ACTIONS {
+  'HANDLE_PAGE' = 'HANDLE_PAGE',
+  'HANDLE_SOCIAL_ACCOUNT' = 'HANDLE_SOCIAL_ACCOUNT',
+  'HANDLE_USER' = 'HANDLE_USER',
+  'HANDLE_PAGE_DETAILS' = 'HANDLE_PAGE_DETAILS',
+}
 
 const SettingsPage: React.FC = () => {
-  const { 
-    getSocialAccounts, 
-    editSocialAccount, 
-    isLoading, 
-    error, 
-    addSocialAccountMutation, 
-    socialAccounts, 
+  const {
+    getSocialAccounts,
+    editSocialAccount,
+    isLoading,
+    error,
+    addSocialAccountMutation,
+    socialAccounts,
     getFacebookAuthUrl,
-  } = useAdmin();
-  
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isConnectPageModalOpen, setIsConnectPageModalOpen] = useState(false);
-  const [selectedAccount, setSelectedAccount] = useState<SocialAccount | null>(null);
-  const { data: pages, isLoading: pagesLoading } = useFacebookPages();
+    useUsers,
+    addUserMutation,
+    editUserMutation,
+    deleteUserMutation,
+  } = useAdmin()
+
+  const [selectedAccount, setSelectedAccount] = useState<SocialAccount | null>(
+    null
+  )
+  const { data: pages, isLoading: pagesLoading } = useFacebookPages()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [modalAction, setModalAction] = useState<E_MODAL_ACTIONS | null>(null)
+  const [selectedPage, setSelectedPage] = useState<Page | null>(null)
+  const [selectedUser, setSelectedUser] = useState<IUser | null>(null)
+  const { data: usersResult, isLoading: usersAreLoading } = useUsers()
+
+  const users = useMemo(() => {
+    if (usersResult) {
+      return (usersResult as unknown as AxiosResponse).data
+    }
+    return []
+  }, [usersResult])
 
   useEffect(() => {
-    getSocialAccounts.mutateAsync();
-  }, []);
+    getSocialAccounts.mutateAsync()
+  }, [])
 
   const handleAddAccount = async (account: SocialAccount) => {
-    await addSocialAccountMutation.mutateAsync(account);
-    setIsAddModalOpen(false);
-    getSocialAccounts.mutateAsync();
-  };
+    await addSocialAccountMutation.mutateAsync(account)
+    setIsModalOpen(false)
+    getSocialAccounts.mutateAsync()
+  }
 
   const handleUpdateAccount = async (account: SocialAccount) => {
-    await editSocialAccount.mutateAsync(account);
-    setIsEditModalOpen(false);
-    getSocialAccounts.mutateAsync();
-  };
+    await editSocialAccount.mutateAsync(account)
+    setIsModalOpen(false)
+    getSocialAccounts.mutateAsync()
+  }
+
+  const handleAddUser = async (user: User) => {
+    await addUserMutation.mutateAsync(user)
+    setIsModalOpen(false)
+  }
+
+  const handleUpdateUser = async (user: User) => {
+    await editUserMutation.mutateAsync(user)
+    setIsModalOpen(false)
+  }
+
+  const handleDeleteUser = async (userId: number) => {
+    await deleteUserMutation.mutateAsync(userId)
+  }
 
   const handleConnectNewPage = async (accountId: number) => {
     try {
-      const authUrl = await getFacebookAuthUrl(accountId.toString());
-      window.open(authUrl, '_blank', 'width=600,height=600');
-      setIsConnectPageModalOpen(false);
+      const authUrl = await getFacebookAuthUrl(accountId.toString())
+      setIsModalOpen(false)
+      window.location.href = authUrl
     } catch (err) {
-      console.error("Erreur lors de la récupération de l'URL d'authentification:", err);
+      console.error(
+        "Erreur lors de la récupération de l'URL d'authentification:",
+        err
+      )
     }
-  };
+  }
 
-  if (isLoading) return <div className="flex justify-center items-center h-screen">Chargement...</div>;
-  if (error) return <div className="text-red-500 text-center">Erreur : {error}</div>;
+  const handlePageClick = (page: Page) => {
+    setSelectedPage(page)
+    setIsModalOpen(true)
+    setModalAction(E_MODAL_ACTIONS.HANDLE_PAGE_DETAILS)
+  }
+
+  const getModalTitle = () => {
+    switch (modalAction) {
+      case E_MODAL_ACTIONS.HANDLE_USER:
+        return 'Ajouter/Modifier un utilisateur'
+      case E_MODAL_ACTIONS.HANDLE_SOCIAL_ACCOUNT:
+        return 'Ajouter/Modifier un reseau social'
+      case E_MODAL_ACTIONS.HANDLE_PAGE:
+        return 'Connecter une page'
+      case E_MODAL_ACTIONS.HANDLE_PAGE_DETAILS:
+        return 'Détails de la page'
+      default:
+        return ''
+    }
+  }
+
+  const modalContent = {
+    HANDLE_USER: (
+      <UserForm
+        user={selectedUser || {}}
+        onSubmit={selectedUser ? handleUpdateUser : handleAddUser}
+        onCancel={() => setIsModalOpen(false)}
+      />
+    ),
+    HANDLE_SOCIAL_ACCOUNT: (
+      <SocialAccountForm
+        account={selectedAccount || {}}
+        onSubmit={selectedAccount ? handleUpdateAccount : handleAddAccount}
+        onCancel={() => setIsModalOpen(false)}
+      />
+    ),
+    HANDLE_PAGE: (
+      <div className="space-y-4">
+        {socialAccounts.map((account) => (
+          <Button
+            key={account.id}
+            onClick={() => handleConnectNewPage(account.id)}
+            className="flex w-full items-center justify-between rounded-lg bg-white px-4 py-3 text-left text-sm font-medium text-gray-700 transition-colors duration-200 ease-in-out hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          >
+            <span className="flex items-center">
+              {account.platform === 'facebook' && (
+                <FaFacebookF className="mr-3 text-indigo-600" />
+              )}
+              {account.platform}
+            </span>
+            <span className="text-indigo-600">&rarr;</span>
+          </Button>
+        ))}
+      </div>
+    ),
+
+    HANDLE_PAGE_DETAILS: <PageDetailsModal page={selectedPage} />,
+  }
+
+  if (isLoading)
+    return (
+      <div className="flex h-screen items-center justify-center">
+        Chargement...
+      </div>
+    )
+  if (error)
+    return <div className="text-center text-red-500">Erreur : {error}</div>
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       <Header />
-      <main className="py-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-extrabold text-gray-900 mb-8">Paramètres</h1>
-        
+      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <h1 className="mb-8 text-3xl font-extrabold text-gray-900">
+          Paramètres
+        </h1>
         <TabGroup>
-          <TabList className="flex space-x-1 rounded-xl bg-blue-900/20 p-1 mb-8">
-            {['Comptes Sociaux', 'Pages Connectées'].map((category) => (
+          <TabList className="mb-8 flex space-x-1 rounded-md bg-gray-900/10 p-1">
+            {['Pages', 'Réseaux', 'Utilisateurs'].map((category) => (
               <Tab
                 key={category}
                 className={({ selected }) =>
-                  `w-full rounded-lg py-2.5 text-sm font-medium leading-5 text-blue-700
-                  ring-white ring-opacity-60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2
-                  ${
+                  `w-full rounded-md py-2.5 text-sm font-medium leading-5 text-gray-700 ring-white ring-opacity-60 ring-offset-2 ring-offset-indigo-400 focus:outline-none focus:ring-2 ${
                     selected
-                      ? 'bg-white shadow'
-                      : 'text-blue-100 hover:bg-white/[0.12] hover:text-white'
+                      ? 'bg-white'
+                      : 'text-gray-500 hover:bg-white/[0.12] hover:text-gray-800'
                   }`
                 }
               >
@@ -82,83 +199,98 @@ const SettingsPage: React.FC = () => {
             ))}
           </TabList>
           <TabPanels>
-            <TabPanel className="bg-white rounded-xl p-6 shadow-lg">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-semibold text-gray-900">Comptes sociaux</h2>
-                <button 
-                  onClick={() => setIsAddModalOpen(true)}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 ease-in-out flex items-center"
+            <TabPanel className="rounded-xl bg-white p-6">
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="text-2xl font-semibold text-gray-900">
+                  Pages Connectées
+                </h2>
+                <Button
+                  onClick={() => {
+                    setIsModalOpen(true)
+                    setModalAction(E_MODAL_ACTIONS.HANDLE_PAGE)
+                  }}
+                  className="flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 ease-in-out hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                 >
-                  <FaPlus className="mr-2" /> Ajouter un compte
-                </button>
-              </div>
-              <SocialAccountsList 
-                accounts={socialAccounts} 
-                onEdit={(account) => {
-                  setSelectedAccount(account);
-                  setIsEditModalOpen(true);
-                }} 
-              />
-            </TabPanel>
-            <TabPanel className="bg-white rounded-xl p-6 shadow-lg">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-semibold text-gray-900">Pages Connectées</h2>
-                <button 
-                  onClick={() => setIsConnectPageModalOpen(true)}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 ease-in-out flex items-center"
-                >
-                  <FaPlus className="mr-2" /> Connecter une nouvelle page
-                </button>
+                  <FaPlus className="mr-2" /> Ajouter
+                </Button>
               </div>
               {pagesLoading ? (
-                <div className="text-center py-4">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                <div className="py-4 text-center">
+                  <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-indigo-500"></div>
                 </div>
               ) : (
-                <ConnectedPagesList pages={pages || []} />
+                <ConnectedPagesList
+                  pages={pages || []}
+                  onPageClick={handlePageClick}
+                />
+              )}
+            </TabPanel>
+            <TabPanel className="rounded-xl bg-white p-6">
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="text-2xl font-semibold text-gray-900">
+                  Réseaux Sociaux
+                </h2>
+                <button
+                  onClick={() => {
+                    setIsModalOpen(true)
+                    setModalAction(E_MODAL_ACTIONS.HANDLE_SOCIAL_ACCOUNT)
+                    setSelectedAccount(null)
+                  }}
+                  className="flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 ease-in-out hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                >
+                  <FaPlus className="mr-2" /> Ajouter
+                </button>
+              </div>
+              <SocialAccountsList
+                accounts={socialAccounts}
+                onEdit={(account) => {
+                  setSelectedAccount(account)
+                  setIsModalOpen(true)
+                  setModalAction(E_MODAL_ACTIONS.HANDLE_SOCIAL_ACCOUNT)
+                }}
+              />
+            </TabPanel>
+
+            <TabPanel className="rounded-xl bg-white p-6">
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="text-2xl font-semibold text-gray-900">
+                  Utilisateurs
+                </h2>
+                <button
+                  onClick={() => {
+                    setSelectedUser(null)
+                    setIsModalOpen(true)
+                    setModalAction(E_MODAL_ACTIONS.HANDLE_USER)
+                  }}
+                  className="flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 ease-in-out hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                >
+                  <FaPlus className="mr-2" /> Ajouter
+                </button>
+              </div>
+              {!usersAreLoading && users && (
+                <UsersList
+                  users={users}
+                  onEdit={(user) => {
+                    setSelectedUser(user)
+                    setIsModalOpen(true)
+                    setModalAction(E_MODAL_ACTIONS.HANDLE_USER)
+                  }}
+                  onDelete={handleDeleteUser}
+                />
               )}
             </TabPanel>
           </TabPanels>
         </TabGroup>
-
-        <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Ajouter un compte social">
-          <SocialAccountForm
-            account={{}}
-            onSubmit={handleAddAccount}
-            onCancel={() => setIsAddModalOpen(false)}
-          />
-        </Modal>
-
-        <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Modifier le compte social">
-          <SocialAccountForm
-            account={selectedAccount || {}}
-            onSubmit={handleUpdateAccount}
-            onCancel={() => setIsEditModalOpen(false)}
-          />
-        </Modal>
-
-        <Modal isOpen={isConnectPageModalOpen} onClose={() => setIsConnectPageModalOpen(false)} title="Connecter une nouvelle page">
-          <div className="space-y-4">
-            {socialAccounts.map((account) => (
-              <button
-                key={account.id}
-                onClick={() => handleConnectNewPage(account.id)}
-                className="w-full flex items-center justify-between px-4 py-3 text-left text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-lg transition-colors duration-200 ease-in-out"
-              >
-                <span className="flex items-center">
-                  {account.platform === 'facebook' && <FaFacebookF className="mr-3 text-blue-600" />}
-                  {account.platform === 'instagram' && <FaInstagram className="mr-3 text-pink-600" />}
-                  {account.platform === 'twitter' && <FaTwitter className="mr-3 text-blue-400" />}
-                  {account.platform}
-                </span>
-                <span className="text-blue-600">&rarr;</span>
-              </button>
-            ))}
-          </div>
+        <Modal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          title={getModalTitle()}
+        >
+          {modalAction ? modalContent[modalAction] : null}
         </Modal>
       </main>
     </div>
-  );
-};
+  )
+}
 
-export default SettingsPage;
+export default SettingsPage

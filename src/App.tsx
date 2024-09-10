@@ -1,9 +1,7 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
-import AdminPage from './pages/AdminPage'
 import SettingsPage from './pages/SettingsPage'
-import SocialPagesPage from './pages/SocialPagesPage'
 import PrivateRoute from './components/PrivateRoute'
 import { NotificationProvider } from './contexts/NotificationContext'
 import Notifications from './components/Notification'
@@ -27,25 +25,6 @@ function App() {
                 }
               />
 
-              <Route
-                path="/social-pages"
-                element={
-                  <PrivateRoute>
-                    <SocialPagesPage />
-                  </PrivateRoute>
-                }
-              />
-
-              <Route
-                path="/admin"
-                element={
-                  <PrivateRoute>
-                    <IsSuperAdminRoute>
-                      <AdminPage />
-                    </IsSuperAdminRoute>
-                  </PrivateRoute>
-                }
-              />
               <Route
                 path="/settings"
                 element={
