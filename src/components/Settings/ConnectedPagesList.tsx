@@ -15,17 +15,17 @@ const ConnectedPagesList: React.FC<ConnectedPagesListProps> = ({
       {pages.map((page) => (
         <div
           key={page.pageId}
-          className="flex items-center justify-between p-4 transition-shadow duration-200 border rounded-lg shadow-sm cursor-pointer hover:shadow-md"
+          className="flex cursor-pointer items-center justify-between rounded-lg border p-4 shadow-sm transition-shadow duration-200 hover:shadow-md"
           onClick={() => onPageClick(page)}
         >
           <img
             src={page.profilePictureUrl}
             alt={page.name}
-            className="object-cover object-center h-10 rounded-full aspect-square"
+            className="aspect-square h-10 rounded-full object-cover object-center"
           />
           <div className="">
             <h3 className="text-xs font-semibold">{page.name}</h3>
-            <p className="text-xs font-light text-gray-600 line-clamp-1">
+            <p className="text-primary-600 line-clamp-1 text-xs font-light">
               ID: {page.pageId}
             </p>
           </div>

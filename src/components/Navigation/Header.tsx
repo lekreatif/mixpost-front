@@ -32,7 +32,7 @@ const Header: React.FC = () => {
               <>
                 <Link
                   to="/settings"
-                  className="text-gray-900 hover:text-gray-700"
+                  className="text-primary-900 hover:text-primary-700"
                 >
                   <CiSettings className="h-6 w-6" />
                 </Link>
@@ -40,7 +40,7 @@ const Header: React.FC = () => {
             )}
             <button
               onClick={logout}
-              className="relative rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+              className="bg-secondary-600 hover:bg-secondary-700 relative rounded-md px-4 py-2 text-sm font-medium text-white"
             >
               <FiLogOut className="h-6 w-6" />
               <span className="sr-only">Déconnexion</span>
@@ -51,7 +51,7 @@ const Header: React.FC = () => {
           <div className="flex items-center md:hidden">
             <button
               onClick={toggleMenu}
-              className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+              className="text-primary-400 focus:ring-secondary-500 hover:bg-primary-100 hover:text-primary-500 inline-flex items-center justify-center rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-inset"
             >
               <span className="sr-only">Ouvrir le menu</span>
               {isMenuOpen ? (
@@ -97,13 +97,13 @@ const Header: React.FC = () => {
             <div className="space-y-1 px-2 pb-3 pt-2 sm:px-3">
               <Link
                 to="/"
-                className="block rounded-md px-3 py-2 text-base font-medium text-gray-900 hover:bg-gray-100"
+                className="text-primary-900 hover:bg-primary-100 block rounded-md px-3 py-2 text-base font-medium"
               >
                 Accueil
               </Link>
               <Link
                 to="/social-pages"
-                className="block rounded-md px-3 py-2 text-base font-medium text-gray-900 hover:bg-gray-100"
+                className="text-primary-900 hover:bg-primary-100 block rounded-md px-3 py-2 text-base font-medium"
               >
                 Pages
               </Link>
@@ -111,13 +111,13 @@ const Header: React.FC = () => {
                 <>
                   <Link
                     to="/admin"
-                    className="block rounded-md px-3 py-2 text-base font-medium text-gray-900 hover:bg-gray-100"
+                    className="text-primary-900 hover:bg-primary-100 block rounded-md px-3 py-2 text-base font-medium"
                   >
                     Admin
                   </Link>
                   <Link
                     to="/settings"
-                    className="block rounded-md px-3 py-2 text-base font-medium text-gray-900 hover:bg-gray-100"
+                    className="text-primary-900 hover:bg-primary-100 block rounded-md px-3 py-2 text-base font-medium"
                   >
                     Paramètres
                   </Link>
@@ -125,7 +125,7 @@ const Header: React.FC = () => {
               )}
               <button
                 onClick={logout}
-                className="block w-full rounded-md bg-indigo-600 px-3 py-2 text-left text-base font-medium text-white hover:bg-indigo-700"
+                className="bg-secondary-600 hover:bg-secondary-700 block w-full rounded-md px-3 py-2 text-left text-base font-medium text-white"
               >
                 Déconnexion
               </button>

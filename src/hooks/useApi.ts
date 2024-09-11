@@ -1,11 +1,10 @@
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import {
   getUser,
   getSocialAccounts,
   getFacebookAuthUrl,
   getAdminFacebookPages,
   getUserFacebookPages,
-  addFacebookPage,
 } from '../services/api'
 import { useAuth } from './useAuth'
 import { USER_ROLE } from '@/types'
@@ -55,8 +54,4 @@ export const useFacebookPages = () => {
     ...query,
     refetch: () => query.refetch(),
   }
-}
-
-export const useAddFacebookPage = () => {
-  return useMutation(addFacebookPage)
 }

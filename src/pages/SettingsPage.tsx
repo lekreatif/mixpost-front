@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useAdmin } from '@/hooks/useAdmin'
-import Header from '@/components/Header'
 import { SocialAccount, IUser } from '@/types'
 import {
   Tab,
@@ -10,19 +9,19 @@ import {
   TabGroup,
   Button,
 } from '@headlessui/react'
-import SocialAccountsList from '@/components/SocialAccountsList'
-import SocialAccountForm from '@/components/SocialAccountForm'
-import ConnectedPagesList from '@/components/ConnectedPagesList'
+import SocialAccountsList from '@/components/Settings/SocialAccountsList'
+import SocialAccountForm from '@/components/Settings/SocialAccountForm'
+import ConnectedPagesList from '@/components/Settings/ConnectedPagesList'
 import { useFacebookPages } from '@/hooks/useApi'
 import { FaPlus, FaFacebookF } from 'react-icons/fa'
 import { AxiosResponse } from 'axios'
-import PageDetailsModal from '@/components/PageDetailsModal'
+import PageDetailsModal from '@/components/Settings/PageDetailsModal'
 import { Page } from '@/types'
 
-import UsersList from '@/components/UsersList'
-import UserForm from '@/components/UserForm'
+import UsersList from '@/components/Settings/User/UsersList'
+import UserForm from '@/components/Settings/User/UserForm'
 
-import Modal from '@/components/Modal'
+import Modal from '@/components/Modals/Modal'
 
 enum E_MODAL_ACTIONS {
   'HANDLE_PAGE' = 'HANDLE_PAGE',
@@ -148,15 +147,15 @@ const SettingsPage: React.FC = () => {
           <Button
             key={account.id}
             onClick={() => handleConnectNewPage(account.id)}
-            className="flex w-full items-center justify-between rounded-lg bg-white px-4 py-3 text-left text-sm font-medium text-gray-700 transition-colors duration-200 ease-in-out hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            className="text-primary-700 focus:ring-secondary-500 hover:bg-primary-50 flex w-full items-center justify-between rounded-lg bg-white px-4 py-3 text-left text-sm font-medium transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2"
           >
             <span className="flex items-center">
               {account.platform === 'facebook' && (
-                <FaFacebookF className="mr-3 text-indigo-600" />
+                <FaFacebookF className="text-secondary-600 mr-3" />
               )}
               {account.platform}
             </span>
-            <span className="text-indigo-600">&rarr;</span>
+            <span className="text-secondary-600">&rarr;</span>
           </Button>
         ))}
       </div>
@@ -175,121 +174,118 @@ const SettingsPage: React.FC = () => {
     return <div className="text-center text-red-500">Erreur : {error}</div>
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <h1 className="mb-8 text-3xl font-extrabold text-gray-900">
-          Paramètres
-        </h1>
-        <TabGroup>
-          <TabList className="mb-8 flex space-x-1 rounded-md bg-gray-900/10 p-1">
-            {['Pages', 'Réseaux', 'Utilisateurs'].map((category) => (
-              <Tab
-                key={category}
-                className={({ selected }) =>
-                  `w-full rounded-md py-2.5 text-sm font-medium leading-5 text-gray-700 ring-white ring-opacity-60 ring-offset-2 ring-offset-indigo-400 focus:outline-none focus:ring-2 ${
-                    selected
-                      ? 'bg-white'
-                      : 'text-gray-500 hover:bg-white/[0.12] hover:text-gray-800'
-                  }`
-                }
+    <>
+      <h1 className="text-primary-900 mb-8 text-3xl font-extrabold">
+        Paramètres
+      </h1>
+      <TabGroup>
+        <TabList className="bg-primary-900/10 mb-8 flex space-x-1 rounded-md p-1">
+          {['Pages', 'Réseaux', 'Utilisateurs'].map((category) => (
+            <Tab
+              key={category}
+              className={({ selected }) =>
+                `ring-offset-secondary-400 text-primary-700 w-full rounded-md py-2.5 text-sm font-medium leading-5 ring-white ring-opacity-60 ring-offset-2 focus:outline-none focus:ring-2 ${
+                  selected
+                    ? 'bg-white'
+                    : 'text-primary-500 hover:text-primary-800 hover:bg-white/[0.12]'
+                }`
+              }
+            >
+              {category}
+            </Tab>
+          ))}
+        </TabList>
+        <TabPanels>
+          <TabPanel className="bg-primary-50 rounded-xl border p-6">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-primary-900 text-2xl font-semibold">
+                Pages Connectées
+              </h2>
+              <Button
+                onClick={() => {
+                  setIsModalOpen(true)
+                  setModalAction(E_MODAL_ACTIONS.HANDLE_PAGE)
+                }}
+                className="bg-secondary-600 hover:bg-secondary-700 focus:ring-secondary-500 flex items-center rounded-md px-4 py-2 text-sm font-medium text-white transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2"
               >
-                {category}
-              </Tab>
-            ))}
-          </TabList>
-          <TabPanels>
-            <TabPanel className="rounded-xl bg-white p-6">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-2xl font-semibold text-gray-900">
-                  Pages Connectées
-                </h2>
-                <Button
-                  onClick={() => {
-                    setIsModalOpen(true)
-                    setModalAction(E_MODAL_ACTIONS.HANDLE_PAGE)
-                  }}
-                  className="flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 ease-in-out hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                >
-                  <FaPlus className="mr-2" /> Ajouter
-                </Button>
+                <FaPlus className="mr-2" /> Ajouter
+              </Button>
+            </div>
+            {pagesLoading ? (
+              <div className="py-4 text-center">
+                <div className="border-secondary-500 mx-auto h-12 w-12 animate-spin rounded-full border-b-2"></div>
               </div>
-              {pagesLoading ? (
-                <div className="py-4 text-center">
-                  <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-indigo-500"></div>
-                </div>
-              ) : (
-                <ConnectedPagesList
-                  pages={pages || []}
-                  onPageClick={handlePageClick}
-                />
-              )}
-            </TabPanel>
-            <TabPanel className="rounded-xl bg-white p-6">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-2xl font-semibold text-gray-900">
-                  Réseaux Sociaux
-                </h2>
-                <button
-                  onClick={() => {
-                    setIsModalOpen(true)
-                    setModalAction(E_MODAL_ACTIONS.HANDLE_SOCIAL_ACCOUNT)
-                    setSelectedAccount(null)
-                  }}
-                  className="flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 ease-in-out hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                >
-                  <FaPlus className="mr-2" /> Ajouter
-                </button>
-              </div>
-              <SocialAccountsList
-                accounts={socialAccounts}
-                onEdit={(account) => {
-                  setSelectedAccount(account)
+            ) : (
+              <ConnectedPagesList
+                pages={pages || []}
+                onPageClick={handlePageClick}
+              />
+            )}
+          </TabPanel>
+          <TabPanel className="bg-primary-50 rounded-xl border p-6">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-primary-900 text-2xl font-semibold">
+                Réseaux Sociaux
+              </h2>
+              <button
+                onClick={() => {
                   setIsModalOpen(true)
                   setModalAction(E_MODAL_ACTIONS.HANDLE_SOCIAL_ACCOUNT)
+                  setSelectedAccount(null)
                 }}
-              />
-            </TabPanel>
+                className="bg-secondary-600 hover:bg-secondary-700 focus:ring-secondary-500 flex items-center rounded-md px-4 py-2 text-sm font-medium text-white transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2"
+              >
+                <FaPlus className="mr-2" /> Ajouter
+              </button>
+            </div>
+            <SocialAccountsList
+              accounts={socialAccounts}
+              onEdit={(account) => {
+                setSelectedAccount(account)
+                setIsModalOpen(true)
+                setModalAction(E_MODAL_ACTIONS.HANDLE_SOCIAL_ACCOUNT)
+              }}
+            />
+          </TabPanel>
 
-            <TabPanel className="rounded-xl bg-white p-6">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-2xl font-semibold text-gray-900">
-                  Utilisateurs
-                </h2>
-                <button
-                  onClick={() => {
-                    setSelectedUser(null)
-                    setIsModalOpen(true)
-                    setModalAction(E_MODAL_ACTIONS.HANDLE_USER)
-                  }}
-                  className="flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 ease-in-out hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                >
-                  <FaPlus className="mr-2" /> Ajouter
-                </button>
-              </div>
-              {!usersAreLoading && users && (
-                <UsersList
-                  users={users}
-                  onEdit={(user) => {
-                    setSelectedUser(user)
-                    setIsModalOpen(true)
-                    setModalAction(E_MODAL_ACTIONS.HANDLE_USER)
-                  }}
-                  onDelete={handleDeleteUser}
-                />
-              )}
-            </TabPanel>
-          </TabPanels>
-        </TabGroup>
-        <Modal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          title={getModalTitle()}
-        >
-          {modalAction ? modalContent[modalAction] : null}
-        </Modal>
-      </main>
-    </div>
+          <TabPanel className="bg-primary-50 rounded-xl border p-6">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-primary-900 text-2xl font-semibold">
+                Utilisateurs
+              </h2>
+              <button
+                onClick={() => {
+                  setSelectedUser(null)
+                  setIsModalOpen(true)
+                  setModalAction(E_MODAL_ACTIONS.HANDLE_USER)
+                }}
+                className="bg-secondary-600 hover:bg-secondary-700 focus:ring-secondary-500 flex items-center rounded-md px-4 py-2 text-sm font-medium text-white transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2"
+              >
+                <FaPlus className="mr-2" /> Ajouter
+              </button>
+            </div>
+            {!usersAreLoading && users && (
+              <UsersList
+                users={users}
+                onEdit={(user) => {
+                  setSelectedUser(user)
+                  setIsModalOpen(true)
+                  setModalAction(E_MODAL_ACTIONS.HANDLE_USER)
+                }}
+                onDelete={handleDeleteUser}
+              />
+            )}
+          </TabPanel>
+        </TabPanels>
+      </TabGroup>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={getModalTitle()}
+      >
+        {modalAction ? modalContent[modalAction] : null}
+      </Modal>
+    </>
   )
 }
 

@@ -11,21 +11,21 @@ interface UsersListProps {
 const UsersList: React.FC<UsersListProps> = ({ users, onEdit, onDelete }) => {
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+      <table className="divide-primary-200 min-w-full divide-y">
+        <thead className="bg-primary-50">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+            <th className="text-primary-500 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
               Email
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+            <th className="text-primary-500 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
               Rôle
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+            <th className="text-primary-500 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
               Actions
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-200 bg-white">
+        <tbody className="divide-primary-200 divide-y bg-white">
           {users.map((user) => (
             <tr key={user.id}>
               <td className="whitespace-nowrap px-6 py-4">{user.email}</td>
@@ -33,7 +33,7 @@ const UsersList: React.FC<UsersListProps> = ({ users, onEdit, onDelete }) => {
               <td className="whitespace-nowrap px-6 py-4">
                 <button
                   onClick={() => onEdit(user)}
-                  className="mr-2 text-indigo-600 hover:text-indigo-900"
+                  className="text-secondary-600 hover:text-secondary-900 mr-2"
                 >
                   <FaEdit />
                 </button>

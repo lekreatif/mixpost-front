@@ -1,7 +1,7 @@
 import { useFacebookPages } from '@/hooks/useApi'
-import Header from '../components/Header'
 import { Page } from '@/types'
 import { Checkbox, Field } from '@headlessui/react'
+import { BsCheckLg } from 'react-icons/bs'
 
 const DashboardPage = () => {
   const { data: pages, isLoading, error } = useFacebookPages()
@@ -11,30 +11,38 @@ const DashboardPage = () => {
 
   return (
     <>
-      <Header />
-      <main className="py-6 mx-auto max-w-7xl sm:px-6 lg:px-8">
-        <div className="">
-          {isLoading ? (
-            <div className="py-4 text-center">
-              <div className="w-12 h-12 mx-auto border-b-2 border-indigo-500 rounded-full animate-spin"></div>
+      <div className="pt-12 md:py-0">
+        {isLoading ? (
+          <div className="py-4 text-center">
+            <div className="w-10 h-10 mx-auto border-b-2 rounded-full border-secondary-500 animate-spin"></div>
+          </div>
+        ) : (
+          <div className="flex flex-col md:flex-row md:items-center md:gap-4">
+            <div className="">
+              <h2 className="text-sm font-medium">Vos Pages:</h2>
             </div>
-          ) : (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1">
               {pages.map((page: Page) => (
                 <Field key={page.name}>
-                  <Checkbox className="inline-block aspect-square w-14 cursor-pointer rounded-full border-2 border-indigo-300 data-[checked]:border-indigo-600">
+                  <Checkbox
+                    className="data-[checked]:border-secondary-600 border-primary-300 group relative inline-block aspect-square w-9 cursor-pointer rounded-full border-2"
+                    // checked={index === 0}
+                  >
                     <img
-                      className="pointer-events-none aspect-square w-full touch-none rounded-full object-cover object-center opacity-75 group-data-[checked]:opacity-100"
+                      className="primaryscale group-data-[checked]:primaryscale-0 pointer-events-none aspect-square w-full touch-none rounded-full object-cover object-center"
                       src={page.profilePictureUrl}
                       alt={page.name}
                     />
+                    <span className="border-secondary-600 bg-primary-50 absolute right-0 top-[20%] hidden h-4 w-4 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full border-2 p-0.5 group-data-[checked]:flex">
+                      <BsCheckLg className="inline-block w-full h-full text-secondary-600" />
+                    </span>
                   </Checkbox>
                 </Field>
               ))}
             </div>
-          )}
-        </div>
-      </main>
+          </div>
+        )}
+      </div>
     </>
   )
 }

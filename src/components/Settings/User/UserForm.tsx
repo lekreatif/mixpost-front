@@ -35,7 +35,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSubmit, onCancel }) => {
       <div>
         <label
           htmlFor="email"
-          className="block text-sm font-medium text-gray-700"
+          className="text-primary-700 block text-sm font-medium"
         >
           Email
         </label>
@@ -45,7 +45,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSubmit, onCancel }) => {
           name="email"
           value={values.email}
           onChange={handleChange}
-          className="mt-1 block h-10 w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          className="border-primary-300 focus:border-secondary-500 focus:ring-secondary-500 mt-1 block h-10 w-full rounded-md border shadow-sm sm:text-sm"
         />
         {errors.email && (
           <p className="mt-2 text-sm text-red-600">{errors.email}</p>
@@ -55,7 +55,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSubmit, onCancel }) => {
       <div>
         <label
           htmlFor="password"
-          className="block text-sm font-medium text-gray-700"
+          className="text-primary-700 block text-sm font-medium"
         >
           Mot de passe
         </label>
@@ -65,7 +65,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSubmit, onCancel }) => {
           name="password"
           value={values.password}
           onChange={handleChange}
-          className="mt-1 block h-10 w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          className="border-primary-300 focus:border-secondary-500 focus:ring-secondary-500 mt-1 block h-10 w-full rounded-md border shadow-sm sm:text-sm"
         />
         {errors.password && (
           <p className="mt-2 text-sm text-red-600">{errors.password}</p>
@@ -75,7 +75,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSubmit, onCancel }) => {
       <div>
         <label
           htmlFor="role"
-          className="block text-sm font-medium text-gray-700"
+          className="text-primary-700 block text-sm font-medium"
         >
           Rôle
         </label>
@@ -84,7 +84,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSubmit, onCancel }) => {
           name="role"
           value={values.role}
           onChange={handleChange}
-          className="mt-1 block h-10 w-full rounded-md border border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+          className="border-primary-300 focus:border-secondary-500 focus:ring-secondary-500 mt-1 block h-10 w-full rounded-md border py-2 pl-3 pr-10 text-base focus:outline-none sm:text-sm"
         >
           <option value="">Sélectionner un rôle</option>
           <option value="admin">Admin</option>
@@ -99,13 +99,13 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSubmit, onCancel }) => {
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          className="text-primary-700 border-primary-300 focus:ring-secondary-500 hover:bg-primary-50 rounded-md border bg-white px-4 py-2 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
         >
           Annuler
         </button>
         <button
           type="submit"
-          className="rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          className="bg-secondary-600 hover:bg-secondary-700 focus:ring-secondary-500 rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
         >
           {user.id ? 'Mettre à jour' : 'Ajouter'}
         </button>

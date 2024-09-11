@@ -31,9 +31,9 @@ const PageDetailsModal: React.FC<PageDetailsModalProps> = ({ page }) => {
             onChange={() => handleUserToggle(user.id)}
             className="group size-6 rounded-md border bg-white/10 p-1 ring-1 ring-inset ring-white/15 data-[checked]:bg-blue-600"
           >
-            <FaCheck className="hidden size-4 fill-gray-50 group-data-[checked]:block" />
+            <FaCheck className="fill-primary-50 hidden size-4 group-data-[checked]:block" />
           </Checkbox>
-          <Label className="text-sm text-gray-700">
+          <Label className="text-primary-700 text-sm">
             {user.email}
             {page?.users?.some((u) => u.userId === user.id) && (
               <span className="ml-2 text-xs text-green-600">(Assigné)</span>
@@ -75,14 +75,14 @@ const PageDetailsModal: React.FC<PageDetailsModalProps> = ({ page }) => {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-lg bg-gray-100 p-4">
-        <h3 className="mb-2 text-lg font-semibold text-gray-800">Page</h3>
+      <div className="bg-primary-100 rounded-lg p-4">
+        <h3 className="text-primary-800 mb-2 text-lg font-semibold">Page</h3>
         <div className="flex items-center justify-between gap-2">
           <div className="">
-            <p className="text-sm font-medium text-gray-600">
+            <p className="text-primary-600 text-sm font-medium">
               <span className="font-medium">Nom :</span> {page.name}
             </p>
-            <p className="text-xs font-light text-gray-600">
+            <p className="text-primary-600 text-xs font-light">
               <span className="font-medium">ID :</span> {page.pageId}
             </p>
           </div>
@@ -95,7 +95,7 @@ const PageDetailsModal: React.FC<PageDetailsModalProps> = ({ page }) => {
       </div>
 
       <div>
-        <h3 className="mb-2 text-lg font-semibold text-gray-800">
+        <h3 className="text-primary-800 mb-2 text-lg font-semibold">
           Utilisateurs
         </h3>
         <div className="max-h-60 overflow-y-auto">{usersListComponent}</div>

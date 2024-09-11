@@ -2,39 +2,40 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import SettingsPage from './pages/SettingsPage'
-import PrivateRoute from './components/PrivateRoute'
+import PrivateRoute from './components/Auth/PrivateRoute'
 import { NotificationProvider } from './contexts/NotificationContext'
-import Notifications from './components/Notification'
-import IsSuperAdminRoute from './components/IsSuperAdminRoute'
+import Notifications from '@/components/Modals/Notification'
+import IsSuperAdminRoute from '@/components/Auth/IsSuperAdminRoute'
 import { AuthProvider } from './contexts/AuthContext'
+import Layout from '@/components/layout/Layout'
 
 function App() {
   return (
     <AuthProvider>
       <NotificationProvider>
         <Router>
-          <div className="min-h-screen bg-gray-100">
+          <div className="bg-primary-100 min-h-screen">
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route
                 path="/"
                 element={
                   <PrivateRoute>
-                    <DashboardPage />
+                    <Layout />
                   </PrivateRoute>
                 }
-              />
+              >
+                <Route path="/" element={<DashboardPage />} />
 
-              <Route
-                path="/settings"
-                element={
-                  <PrivateRoute>
+                <Route
+                  path="/settings"
+                  element={
                     <IsSuperAdminRoute>
                       <SettingsPage />
                     </IsSuperAdminRoute>
-                  </PrivateRoute>
-                }
-              />
+                  }
+                />
+              </Route>
             </Routes>
             <Notifications />
           </div>

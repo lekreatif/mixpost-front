@@ -37,7 +37,7 @@ const SocialAccountForm: React.FC<SocialAccountFormProps> = ({
       <div>
         <label
           htmlFor="platform"
-          className="block text-sm font-medium text-gray-700"
+          className="text-primary-700 block text-sm font-medium"
         >
           Plateforme
         </label>
@@ -46,7 +46,7 @@ const SocialAccountForm: React.FC<SocialAccountFormProps> = ({
           name="platform"
           value={values.platform}
           onChange={handleChange}
-          className="mt-1 block h-10 w-full rounded-md border border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+          className="border-primary-300 focus:border-secondary-500 focus:ring-secondary-500 mt-1 block h-10 w-full rounded-md border py-2 pl-3 pr-10 text-base focus:outline-none sm:text-sm"
         >
           <option value="">Sélectionner une plateforme</option>
           {Object.values(SocialPlatform).map((platform) => (
@@ -63,7 +63,7 @@ const SocialAccountForm: React.FC<SocialAccountFormProps> = ({
       <div>
         <label
           htmlFor="appClientId"
-          className="block text-sm font-medium text-gray-700"
+          className="text-primary-700 block text-sm font-medium"
         >
           App Client ID
         </label>
@@ -73,7 +73,7 @@ const SocialAccountForm: React.FC<SocialAccountFormProps> = ({
           name="appClientId"
           value={values.appClientId}
           onChange={handleChange}
-          className="mt-1 block h-10 w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          className="border-primary-300 focus:border-secondary-500 focus:ring-secondary-500 mt-1 block h-10 w-full rounded-md border shadow-sm sm:text-sm"
         />
         {errors.appClientId && (
           <p className="mt-2 text-sm text-red-600">{errors.appClientId}</p>
@@ -83,7 +83,7 @@ const SocialAccountForm: React.FC<SocialAccountFormProps> = ({
       <div>
         <label
           htmlFor="appClientSecret"
-          className="block text-sm font-medium text-gray-700"
+          className="text-primary-700 block text-sm font-medium"
         >
           App Client Secret
         </label>
@@ -93,7 +93,7 @@ const SocialAccountForm: React.FC<SocialAccountFormProps> = ({
           name="appClientSecret"
           value={values.appClientSecret}
           onChange={handleChange}
-          className="mt-1 block h-10 w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          className="border-primary-300 focus:border-secondary-500 focus:ring-secondary-500 mt-1 block h-10 w-full rounded-md border shadow-sm sm:text-sm"
         />
         {errors.appClientSecret && (
           <p className="mt-2 text-sm text-red-600">{errors.appClientSecret}</p>
@@ -104,13 +104,13 @@ const SocialAccountForm: React.FC<SocialAccountFormProps> = ({
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          className="text-primary-700 border-primary-300 focus:ring-secondary-500 hover:bg-primary-50 rounded-md border bg-white px-4 py-2 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
         >
           Annuler
         </button>
         <button
           type="submit"
-          className="rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          className="bg-secondary-600 hover:bg-secondary-700 focus:ring-secondary-500 rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
         >
           {account.id ? 'Mettre à jour' : 'Ajouter'}
         </button>
