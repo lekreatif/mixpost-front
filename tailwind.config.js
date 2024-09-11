@@ -9,9 +9,9 @@ module.exports = {
         sans: ['Poppins', 'sans-serif'],
       },
       colors: {
-        primary: colors.gray,
+        primary: colors.neutral,
         secondary: colors.indigo,
-        accent: colors.green,
+        accent: colors.blue,
       },
     },
   },

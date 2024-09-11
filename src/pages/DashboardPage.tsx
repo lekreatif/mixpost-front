@@ -14,7 +14,7 @@ const DashboardPage = () => {
       <div className="pt-12 md:py-0">
         {isLoading ? (
           <div className="py-4 text-center">
-            <div className="w-10 h-10 mx-auto border-b-2 rounded-full border-secondary-500 animate-spin"></div>
+            <div className="border-secondary-500 mx-auto h-10 w-10 animate-spin rounded-full border-b-2"></div>
           </div>
         ) : (
           <div className="flex flex-col md:flex-row md:items-center md:gap-4">
@@ -24,17 +24,19 @@ const DashboardPage = () => {
             <div className="flex flex-wrap gap-1">
               {pages.map((page: Page) => (
                 <Field key={page.name}>
-                  <Checkbox
-                    className="data-[checked]:border-secondary-600 border-primary-300 group relative inline-block aspect-square w-9 cursor-pointer rounded-full border-2"
-                    // checked={index === 0}
-                  >
-                    <img
-                      className="primaryscale group-data-[checked]:primaryscale-0 pointer-events-none aspect-square w-full touch-none rounded-full object-cover object-center"
-                      src={page.profilePictureUrl}
-                      alt={page.name}
-                    />
-                    <span className="border-secondary-600 bg-primary-50 absolute right-0 top-[20%] hidden h-4 w-4 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full border-2 p-0.5 group-data-[checked]:flex">
-                      <BsCheckLg className="inline-block w-full h-full text-secondary-600" />
+                  <Checkbox className="group flex flex-col justify-center">
+                    <div className="group-data-[checked]:border-secondary-600 border-primary-300 relative inline-block aspect-square w-9 cursor-pointer rounded-full border-2">
+                      <img
+                        className="pointer-events-none aspect-square w-full touch-none rounded-full object-cover object-center grayscale group-data-[checked]:grayscale-0"
+                        src={page.profilePictureUrl}
+                        alt={page.name}
+                      />
+                      <span className="border-secondary-600 bg-primary-50 absolute right-0 top-[20%] hidden h-4 w-4 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full border-2 p-0.5 group-data-[checked]:flex">
+                        <BsCheckLg className="text-secondary-600 inline-block h-full w-full" />
+                      </span>
+                    </div>
+                    <span className="text-primary-400 group-data-[checked]:text-primary-600 line-clamp-1 w-12 text-xs font-light">
+                      {page.name}
                     </span>
                   </Checkbox>
                 </Field>

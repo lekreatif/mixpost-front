@@ -36,35 +36,38 @@ const Sidebar: React.FC<SidebarProps> = ({ className, handleClose }) => {
   }
   return (
     <div className={`${className}`}>
-      <div className="flex flex-col h-full px-1">
-        <div className="flex items-center justify-between mt-2 mb-4 md:justify-center">
+      <div className="flex h-full flex-col px-1">
+        <div className="mb-4 mt-2 flex items-center justify-between md:justify-center">
           <Link
-            className="block w-full py-2 font-sans text-lg font-bold text-center border-b"
+            className="block w-full border-b py-2 text-center font-sans text-lg font-bold"
             to="/"
           >
             <span>LeKreatif</span>
           </Link>
           <Button
             onClick={onClose}
-            className="p-1 border rounded-md bg-primary-50 md:hidden"
+            className="rounded-md border bg-primary-50 p-1 md:hidden"
           >
             <IoIosClose className="" />
           </Button>
         </div>
         <div className="">
-          <Button className="flex items-center justify-center w-full py-2 text-sm font-light bg-secondary-600 hover:bg-secondary-700 text-primary-50">
-            <IoShareSocialOutline className="w-4 h-4 mr-2" />
+          <Link
+            to="/creer"
+            className="flex w-full items-center justify-center bg-secondary-600 py-2 text-sm font-light text-primary-50 hover:bg-secondary-700"
+          >
+            <IoShareSocialOutline className="mr-2 h-4 w-4" />
             <span>Créer</span>
-          </Button>
+          </Link>
         </div>
         <nav className={`flex-1 p-4`}>
           <ul className="space-y-2 text-sm font-light">
             <li>
               <NavLink
                 to="/"
-                className="flex items-center p-2 rounded text-primary-600 hover:bg-primary-100"
+                className="flex items-center rounded p-2 text-primary-600 hover:bg-primary-100"
               >
-                <RxDashboard className="w-4 h-4 mr-2" />
+                <RxDashboard className="mr-2 h-4 w-4" />
                 Accueil
               </NavLink>
             </li>
@@ -76,19 +79,19 @@ const Sidebar: React.FC<SidebarProps> = ({ className, handleClose }) => {
               <li>
                 <NavLink
                   to="/settings"
-                  className="flex items-center p-2 rounded text-primary-600 hover:bg-primary-100"
+                  className="flex items-center rounded p-2 text-primary-600 hover:bg-primary-100"
                 >
-                  <IoSettingsOutline className="w-4 h-4 mr-2" />
+                  <IoSettingsOutline className="mr-2 h-4 w-4" />
                   Paramètres
                 </NavLink>
               </li>
             )}
           </ul>
           <Button
-            className="flex items-center justify-center mt-3 text-xs font-medium cursor-pointer"
+            className="mt-3 flex cursor-pointer items-center justify-center text-xs font-medium"
             onClick={handleLogout}
           >
-            <IoLogOutOutline className="w-4 h-4 mr-2" />
+            <IoLogOutOutline className="mr-2 h-4 w-4" />
             <span className="">Déconnexion</span>
           </Button>
         </nav>
