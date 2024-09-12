@@ -58,15 +58,15 @@ const MediaSelection: React.FC = () => {
       {mediaType === 'video' && selectedFiles.length > 0 && (
         <div className="mt-4">
           <div className="flex items-center justify-between rounded-md bg-primary-50 p-2">
-            <div className="flex items-center">
-              {selectedThumbnail && (
+            <div className="flex items-center gap-4">
+              {suggestedThumbnails.length > 0 && (
                 <img
-                  src={selectedThumbnail}
+                  src={URL.createObjectURL(suggestedThumbnails[1])}
                   alt="Video thumbnail"
-                  className="mr-2 h-16 w-16 rounded object-cover"
+                  className="mr-2 h-16 aspect-auto shrink-0 rounded object-cover"
                 />
               )}
-              <span className="text-sm">{selectedFiles[0].name}</span>
+              <span className="text-xs font-light line-clam-1 block w-60">{selectedFiles[0].name}</span>
             </div>
             <Button
               onClick={() => removeFile(selectedFiles[0].name)}

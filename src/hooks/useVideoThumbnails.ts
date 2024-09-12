@@ -45,8 +45,8 @@ export const useVideoThumbnails = (
         })
 
         const newThumbnails: Blob[] = []
-        for (let i = 0; i < 3; i++) {
-          const time = (i * video.duration) / 3
+        for (let i = 0; i < 5; i++) {
+          const time = (i * video.duration) / 7
           const blob = await captureFrame(time)
           newThumbnails.push(blob)
         }

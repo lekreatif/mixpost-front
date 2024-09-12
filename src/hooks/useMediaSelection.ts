@@ -8,9 +8,9 @@ export const useMediaSelection = () => {
   const [thumbnailType, setThumbnailType] = useState<'suggested' | 'custom'>(
     'suggested'
   )
-  const [customThumbnail, setCustomThumbnail] = useState<File | null>(null)
+  const [customThumbnail, setCustomThumbnail] = useState<Blob | null>(null)
   const [suggestedThumbnails, setSuggestedThumbnails] = useState<Blob[]>([])
-  const [selectedThumbnail, setSelectedThumbnail] = useState<string | null>(
+  const [selectedThumbnail, setSelectedThumbnail] = useState<Blob | null>(
     null
   )
 
@@ -52,9 +52,16 @@ export const useMediaSelection = () => {
   }, [])
 
   const handleCustomThumbnailSelection = useCallback((file: File) => {
-    setCustomThumbnail(file)
-    setThumbnailType('custom')
-    setSelectedThumbnail(URL.createObjectURL(file))
+    const reader = new FileReader()
+    reader.readAsArrayBuffer(file);
+    reader.onload = () => {
+      const arrayBuffer = reader.result;
+      if(arrayBuffer){
+      const blob = new Blob([arrayBuffer], { type: file.type });
+      setCustomThumbnail(blob)
+      setSelectedThumbnail(blob)
+      }
+    };
   }, [])
 
   useEffect(() => {

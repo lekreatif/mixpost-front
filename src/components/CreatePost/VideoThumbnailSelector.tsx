@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react'
-import { RadioGroup, Radio, Field } from '@headlessui/react'
+import React, { useRef} from 'react'
+import { RadioGroup, Radio, Field, Button, Input } from '@headlessui/react'
 import { useVideoThumbnails } from '@/hooks/useVideoThumbnails'
 
 interface VideoThumbnailSelectorProps {
@@ -15,7 +15,9 @@ const VideoThumbnailSelector: React.FC<VideoThumbnailSelectorProps> = ({
   videoFile,
   setThumbnails,
   thumbnails,
+  onCustomThumbnailSelect,
 }) => {
+  const customThumbnailInputRef = useRef<HTMLInputElement>(null)
   useVideoThumbnails(videoFile, setThumbnails)
 
   if (!videoFile) return null
@@ -37,7 +39,18 @@ const VideoThumbnailSelector: React.FC<VideoThumbnailSelectorProps> = ({
         </RadioGroup>
       </Field>
 
-      <Field></Field>
+      <Field className="relative my-4">
+        <Input onChange={(event)=>{
+          if (event.target.files)
+            onCustomThumbnailSelect(event.target.files[0])
+        } } type="file" className="sr-only" ref={customThumbnailInputRef} />
+        <Button onClick={()=> {
+          if (customThumbnailInputRef.current)
+            customThumbnailInputRef.current.click()
+          }}>
+          Choisir de votre ordinateur
+        </Button>
+      </Field>
     </div>
   )
 }

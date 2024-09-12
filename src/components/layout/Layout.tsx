@@ -11,7 +11,7 @@ const Layout: React.FC = () => {
     setIsSidebarOpen(!isSidebarOpen)
   }
   return (
-    <div className="bg-primary-50 relative flex h-dvh w-dvw">
+    <div className="bg-primary-50 relative flex h-dvh w-dvw max-w-[100rem] mx-auto">
       <Sidebar
         handleClose={toggleSidebar}
         className={`bg-primary-50 fixed left-0 top-0 z-50 h-full w-40 border-r transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${
