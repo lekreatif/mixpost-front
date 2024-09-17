@@ -11,7 +11,7 @@ import Preview from '@/components/CreatePost/Preview'
 const CreatePostPage: React.FC = () => {
   return (
     <CreatePostProvider>
-      <div className="fixed z-50 w-full max-w-[40rem] bg-primary-50 pb-4 pt-2">
+      <div className="fixed z-10 hidden w-full max-w-[40rem] bg-primary-50 pb-4 pt-2 md:block">
         Créer une publication
       </div>
       <div className="flex justify-between h-full gap-8 pt-16">
@@ -25,8 +25,8 @@ const CreatePostPage: React.FC = () => {
           </div>
           <ActionButtons />
         </div>
-        <div className="max-w-[30rem] flex-1 overflow-y-auto p-4">
-          <div className="mx-auto max-w-[30rem] overflow-hidden rounded-xl border">
+        <div className="max-w-[32rem] flex-1 overflow-y-auto p-4">
+          <div className="mx-auto max-w-[32rem] overflow-hidden rounded-xl border">
             <Preview />
           </div>
         </div>

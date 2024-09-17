@@ -4,6 +4,11 @@ export enum USER_ROLE {
   USER = 'USER',
 }
 
+export enum MediaType {
+  IMAGE = 'IMAGE',
+  VIDEO = 'VIDEO',
+}
+
 export interface Page {
   name: string
   pageId: string
@@ -30,4 +35,27 @@ export interface SocialAccount {
 
 export enum SocialPlatform {
   FACEBOOK = 'facebook',
+}
+
+export interface PostData {
+  description: string
+  isPublic: boolean
+  mediaType: MediaType | null
+  scheduledFor?: number
+  pagesIds: string[]
+  medias: { url: string }[]
+  videoTitle?: string
+  thumbnailUrl?: string
+}
+
+export interface Media {
+  blob: Blob
+  fileName: string
+}
+
+export enum PostStatus {
+  DRAFT = 'DRAFT',
+  SCHEDULED = 'SCHEDULED',
+  PUBLISHED = 'PUBLISHED',
+  FAILED = 'FAILED',
 }

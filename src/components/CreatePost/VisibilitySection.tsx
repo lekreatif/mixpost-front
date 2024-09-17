@@ -23,7 +23,7 @@ const VisibilitySection: React.FC = () => {
   ]
 
   return (
-    <div className="mb-4 rounded-xl border bg-primary-100 p-4">
+    <div className="p-4 mb-4 border rounded-xl bg-primary-100">
       <h2 className="mb-2 font-sans text-base font-medium">Visibilité</h2>
       <RadioGroup
         value={isPublic ? 'public' : 'private'}
@@ -36,9 +36,9 @@ const VisibilitySection: React.FC = () => {
             value={option.id}
             className="group relative flex cursor-pointer rounded-lg bg-primary-100 px-5 py-4 text-primary-900 transition focus:outline-none data-[checked]:border data-[checked]:bg-primary-50 data-[focus]:outline-1 data-[focus]:outline-primary-500"
           >
-            <div className="flex w-full items-center justify-between">
+            <div className="flex items-center justify-between w-full">
               <div className="flex items-center">
-                <option.icon className="mr-3 h-6 w-6 text-primary-400" />
+                <option.icon className="w-6 h-6 mr-3 text-primary-400" />
                 <div className="text-sm">
                   <p className="font-semibold">{option.label}</p>
                   <p className="font-light text-primary-500">
@@ -46,7 +46,7 @@ const VisibilitySection: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <CheckCircleIcon className="h-6 w-6 text-accent-600 opacity-0 transition group-data-[checked]:opacity-100" />
+              <CheckCircleIcon className="h-6 w-6 text-secondary-600 opacity-0 transition group-data-[checked]:opacity-100" />
             </div>
           </Radio>
         ))}

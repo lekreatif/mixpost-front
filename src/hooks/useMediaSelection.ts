@@ -1,91 +1,111 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import { useCreatePost } from './useCreatePost'
+import { MediaType } from '@/types'
 
 export const useMediaSelection = () => {
-  const { mediaType, setMediaType } = useCreatePost()
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
-  const [videoTitle, setVideoTitle] = useState('')
-  const [thumbnailType, setThumbnailType] = useState<'suggested' | 'custom'>(
-    'suggested'
-  )
+  const {
+    mediaType,
+    setMediaType,
+    medias,
+    setMedias,
+    videoTitle,
+    setVideoTitle,
+    thumbnail,
+    setThumbnail,
+  } = useCreatePost()
+
   const [customThumbnail, setCustomThumbnail] = useState<Blob | null>(null)
   const [suggestedThumbnails, setSuggestedThumbnails] = useState<Blob[]>([])
-  const [selectedThumbnail, setSelectedThumbnail] = useState<Blob | null>(
-    null
-  )
 
   const handleFileSelection = useCallback(
     (files: FileList | null) => {
       if (!files) return
 
       const newFiles = Array.from(files).filter(
-        (file) =>
-          !selectedFiles.some((selectedFile) => selectedFile.name === file.name)
+        (file) => !medias.some((media) => media.fileName === file.name)
       )
 
-      setSelectedFiles((prev) => [...prev, ...newFiles])
-      if (mediaType === 'video' && newFiles.length > 0) {
-        // without the extension
-        setVideoTitle(newFiles[0].name.split('.').slice(0, -1).join('.'))
+      if (newFiles.length === 0) return
+
+      const readFilesAsBlobs = async (
+        fileList: File[]
+      ): Promise<{ blob: Blob; fileName: string }[]> => {
+        const promises = fileList.map(
+          (file) =>
+            new Promise<{ blob: Blob; fileName: string }>((resolve, reject) => {
+              const reader = new FileReader()
+              const fileName = file.name
+              reader.onload = () => {
+                if (reader.result) {
+                  const blob = new Blob([reader.result], { type: file.type })
+                  resolve({ fileName, blob })
+                }
+              }
+              reader.onerror = () => reject(reader.error)
+              reader.readAsArrayBuffer(file)
+            })
+        )
+        return Promise.all(promises)
       }
+
+      readFilesAsBlobs(newFiles).then(
+        (blobs: { blob: Blob; fileName: string }[]) => {
+          if (mediaType === MediaType.VIDEO) {
+            setMedias([blobs[0]])
+            setVideoTitle(newFiles[0].name.split('.').slice(0, -1).join('.'))
+          } else setMedias((prev) => [...prev, ...blobs])
+        }
+      )
     },
-    [selectedFiles, mediaType]
+    [setMedias, mediaType, medias, setVideoTitle]
   )
 
   const removeFile = useCallback(
-    (fileToRemoveName: string) => {
-      setSelectedFiles((prev) =>
-        prev.filter((file) => file.name !== fileToRemoveName)
-      )
-      if (mediaType === 'video') {
+    (blobIndex: number) => {
+      if (mediaType === MediaType.VIDEO) {
+        setMedias([])
         setVideoTitle('')
         setSuggestedThumbnails([])
-        setSelectedThumbnail(null)
+        setThumbnail(null)
+      } else {
+        setMedias((prev) => prev.filter((_, index) => index !== blobIndex))
       }
     },
-    [mediaType]
+    [mediaType, setMedias, setVideoTitle]
   )
 
-  const handleThumbnailSelection = useCallback((file: File | null) => {
-    setCustomThumbnail(file)
-    setThumbnailType('custom')
-  }, [])
+  const handleThumbnailSelection = useCallback(
+    (file: File | null) => setCustomThumbnail(file),
+    []
+  )
 
   const handleCustomThumbnailSelection = useCallback((file: File) => {
     const reader = new FileReader()
-    reader.readAsArrayBuffer(file);
+    reader.readAsArrayBuffer(file)
     reader.onload = () => {
-      const arrayBuffer = reader.result;
-      if(arrayBuffer){
-      const blob = new Blob([arrayBuffer], { type: file.type });
-      setCustomThumbnail(blob)
-      setSelectedThumbnail(blob)
+      const arrayBuffer = reader.result
+      if (arrayBuffer) {
+        const blob = new Blob([arrayBuffer], { type: file.type })
+        setCustomThumbnail(blob)
+        setThumbnail(blob)
       }
-    };
-  }, [])
-
-  useEffect(() => {
-    if (selectedFiles.length === 0) {
-      setMediaType(null)
     }
-  }, [selectedFiles, setMediaType])
+  }, [])
 
   return {
     mediaType,
     setMediaType,
-    selectedFiles,
     handleFileSelection,
     removeFile,
     videoTitle,
     setVideoTitle,
-    thumbnailType,
-    setThumbnailType,
     customThumbnail,
     handleThumbnailSelection,
     suggestedThumbnails,
-    selectedThumbnail,
-    setSelectedThumbnail,
+    thumbnail,
+    setThumbnail,
     handleCustomThumbnailSelection,
     setSuggestedThumbnails,
+    medias,
   }
 }

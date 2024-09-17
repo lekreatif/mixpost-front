@@ -1,11 +1,12 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 export const useVideoThumbnails = (
-  videoFile: File | null,
+  videoBlob: Blob | null,
   setThumbnails: React.Dispatch<React.SetStateAction<Blob[]>>
 ) => {
+  const videoUrlRef = useRef<string | null>(null)
   useEffect(() => {
-    if (!videoFile) {
+    if (!videoBlob) {
       setThumbnails([])
       return
     }
@@ -14,7 +15,8 @@ export const useVideoThumbnails = (
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
 
-    video.src = URL.createObjectURL(videoFile)
+    videoUrlRef.current = URL.createObjectURL(videoBlob)
+    video.src = videoUrlRef.current
 
     const captureFrame = (time: number): Promise<Blob> => {
       return new Promise((resolve, reject) => {
@@ -51,9 +53,7 @@ export const useVideoThumbnails = (
           newThumbnails.push(blob)
         }
 
-        // setThumbnails(newThumbnails)
         setThumbnails(newThumbnails)
-        console.log(newThumbnails)
       } catch (err) {
         //
       } finally {
@@ -64,7 +64,10 @@ export const useVideoThumbnails = (
     generateThumbnails()
 
     return () => {
-      URL.revokeObjectURL(video.src)
+      if (videoUrlRef.current) {
+        URL.revokeObjectURL(videoUrlRef.current)
+        videoUrlRef.current = null
+      }
     }
-  }, [videoFile, setThumbnails])
+  }, [videoBlob, setThumbnails])
 }

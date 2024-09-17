@@ -1,3 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+  .react-datepicker {
+    @apply rounded-lg border border-gray-300 font-sans shadow-lg;
+  }
+  .react-datepicker__header {
+    @apply border-b border-gray-300 bg-gray-100;
+  }
+  .react-datepicker__day--selected {
+    @apply bg-primary-500 text-white;
+  }
+  .react-datepicker__day:hover {
+    @apply bg-primary-100;
+  }
+  .react-datepicker__time-container {
+    @apply border-l border-gray-300;
+  }
+  .react-datepicker__time-list-item--selected {
+    @apply bg-primary-500 text-white !important;
+  }
+}
