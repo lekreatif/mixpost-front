@@ -11,23 +11,23 @@ const Layout: React.FC = () => {
     setIsSidebarOpen(!isSidebarOpen)
   }
   return (
-    <div className="bg-primary-50 relative flex h-dvh w-dvw max-w-[100rem] mx-auto">
+    <div className="relative mx-auto flex h-dvh w-dvw max-w-[100rem] bg-primary-50">
       <Sidebar
         handleClose={toggleSidebar}
-        className={`bg-primary-50 fixed left-0 top-0 z-50 h-full w-40 border-r transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${
+        className={`fixed left-0 top-0 z-50 h-full w-40 border-r bg-primary-50 transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       />
-      <div className="fixed flex flex-1 flex-col md:hidden">
+      <div className="fixed flex flex-col flex-1 md:hidden">
         <Button
-          className="bg-primary-50 fixed left-4 top-4 z-20 rounded-md border p-1 md:hidden"
+          className="fixed z-20 p-1 border rounded-md left-4 top-4 bg-primary-50 md:hidden"
           onClick={toggleSidebar}
           aria-label="Toggle sidebar"
         >
           <LiaGripLinesSolid className="" />
         </Button>
       </div>
-      <main className="bg-primary-50 flex-1 overflow-y-auto overflow-x-hidden p-4">
+      <main className="flex-1 p-2 overflow-x-hidden overflow-y-auto bg-primary-50 sm:p-4">
         <Outlet />
       </main>
     </div>

@@ -1,24 +1,35 @@
-import { createContext, ReactNode, useCallback, useState, useEffect } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { login as loginApi, logout as logoutApi, refreshAccessToken, getUser } from '../services/api'
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useState,
+  useEffect,
+} from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import {
+  login as loginApi,
+  logout as logoutApi,
+  refreshAccessToken,
+  getUser,
+  setIsRefreshing,
+  getIsRefreshing,
+  setRefreshPromise,
+  getRefreshPromise,
+} from '../services/api'
 import { IUser } from '@/types'
-
-interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
 interface AuthContextType {
   isLoading: boolean
   error: string | null
   user: IUser | null
   isAuthenticated: boolean
-  login: (email: string, password: string) => Promise<void>
+  login: (email: string, password: string, rememberMe: boolean) => Promise<void>
   logout: () => Promise<void>
   checkAuth: () => Promise<void>
+  setError: (error: string | null) => void
+  refreshToken: () => Promise<void | null>
 }
 
-export const AuthContext = createContext({} as AuthContextType)
+export const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const queryClient = useQueryClient()
@@ -27,36 +38,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null)
   const [user, setUser] = useState<IUser | null>(null)
 
-  const loginMutation = useMutation({
-    mutationFn: (credentials: LoginCredentials) => loginApi(credentials.email, credentials.password),
-    onSuccess: () => {
-      setIsAuthenticated(true)
-      setError(null)
-      queryClient.invalidateQueries({ queryKey: ['user'] })
-    },
-    onError: () => {
-      setError('Erreur de connexion')
-      setIsAuthenticated(false)
-    },
-  })
-
-  const logoutMutation = useMutation({
-    mutationFn: logoutApi,
-    onSuccess: () => {
-      setIsAuthenticated(false)
-      setUser(null)
-      queryClient.clear()
-    },
-    onError: () => {
-      setError('Erreur lors de la déconnexion')
-    },
-  })
-
   const checkAuth = useCallback(async () => {
+    setIsLoading(true)
     try {
-      await refreshAccessToken()
+      if (getIsRefreshing()) {
+        await getRefreshPromise()
+      }
       const userData = await getUser()
-      setUser(userData.data as unknown as IUser)
+      setUser(userData.data as IUser)
       setIsAuthenticated(true)
       setError(null)
     } catch (err) {
@@ -68,28 +57,57 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [])
 
+  const handleRefreshToken = useCallback(async () => {
+    if (getIsRefreshing()) return getRefreshPromise()
+
+    setIsRefreshing(true)
+    const promise = refreshAccessToken()
+      .then(() => {
+        setIsRefreshing(false)
+      })
+      .catch((error) => {
+        setIsRefreshing(false)
+        throw error
+      })
+
+    setRefreshPromise(promise)
+    return promise
+  }, [])
+
   useEffect(() => {
     checkAuth()
   }, [checkAuth])
 
-  const handleLogin = useCallback(async (email: string, password: string) => {
-    setIsLoading(true)
-    try {
-      await loginMutation.mutateAsync({ email, password })
-      await checkAuth()
-    } finally {
-      setIsLoading(false)
-    }
-  }, [loginMutation, checkAuth])
+  const handleLogin = useCallback(
+    async (email: string, password: string, rememberMe: boolean) => {
+      setIsLoading(true)
+      try {
+        await loginApi(email, password, rememberMe)
+        await checkAuth()
+      } catch (error) {
+        setError('Erreur de connexion')
+        setIsAuthenticated(false)
+        setUser(null)
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [checkAuth]
+  )
 
   const handleLogout = useCallback(async () => {
     setIsLoading(true)
     try {
-      await logoutMutation.mutateAsync()
+      await logoutApi()
+      setIsAuthenticated(false)
+      setUser(null)
+      queryClient.clear()
+    } catch (err) {
+      setError('Erreur lors de la déconnexion')
     } finally {
       setIsLoading(false)
     }
-  }, [logoutMutation])
+  }, [queryClient])
 
   return (
     <AuthContext.Provider
@@ -101,6 +119,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login: handleLogin,
         logout: handleLogout,
         checkAuth,
+        refreshToken: handleRefreshToken,
+        setError,
       }}
     >
       {children}

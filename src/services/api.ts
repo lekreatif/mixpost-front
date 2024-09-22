@@ -1,16 +1,65 @@
-import axios, { AxiosResponse } from 'axios'
+import axios, { AxiosResponse, AxiosError } from 'axios'
 import { IUser, SocialAccount } from '@/types'
 
 const API_URL = '/api'
 
 export const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true, // Important pour envoyer les cookies avec chaque requête
+  withCredentials: true,
 })
 
-export const login = async (email: string, password: string): Promise<void> => {
-  await api.post('/auth/login', { email, password })
-  // Le serveur gère maintenant la création et l'envoi du cookie
+let isRefreshing = false
+let refreshPromise: Promise<void> | null = null
+
+export const setIsRefreshing = (value: boolean) => {
+  isRefreshing = value
+}
+
+export const getIsRefreshing = () => isRefreshing
+
+export const setRefreshPromise = (promise: Promise<void> | null) => {
+  refreshPromise = promise
+}
+
+export const getRefreshPromise = () => refreshPromise
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config as any
+    if (error.response?.status === 401 && !originalRequest?._retry) {
+      originalRequest._retry = true
+
+      if (isRefreshing) {
+        try {
+          await refreshPromise
+          return api(originalRequest)
+        } catch (refreshError) {
+          return Promise.reject(refreshError)
+        }
+      }
+
+      return Promise.reject(error)
+    }
+    return Promise.reject(error)
+  }
+)
+
+export const refreshAccessToken = async (): Promise<void> => {
+  try {
+    await api.post('/auth/refresh')
+  } catch (error) {
+    console.error('Failed to refresh token:', error)
+    throw error
+  }
+}
+
+export const login = async (
+  email: string,
+  password: string,
+  rememberMe: boolean
+): Promise<void> => {
+  await api.post('/auth/login', { email, password, rememberMe })
 }
 
 export const logout = async (): Promise<void> => {
@@ -45,10 +94,6 @@ export const addFacebookPage = async (pageId: string) => {
 export const getSocialAccounts = async () => {
   const response = await api.get('/social-accounts')
   return response.data
-}
-
-export const refreshAccessToken = async (): Promise<void> => {
-  await api.post('/auth/refresh')
 }
 
 export const createSocialAccount = async (data: SocialAccount) =>

@@ -1,25 +1,38 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Field, Input, Label } from '@headlessui/react'
+import { Button, Field, Input, Label } from '@headlessui/react'
 import Logo from '@/components/layout/Logo'
-const LoginPage = () => {
+import { FullPageLoader } from '@/components/layout/FullPageLoader'
+
+const LoginPage: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const { login, isLoading, error, isAuthenticated } = useAuth()
+  const [rememberMe, setRememberMe] = useState(false)
+  const { login, isLoading, error, isAuthenticated, setError } = useAuth()
 
   useEffect(() => {
     if (isAuthenticated) {
-      const { from } = location.state || { from: { pathname: '/' } }
+      const { from } = (location.state as { from: { pathname: string } }) || {
+        from: { pathname: '/' },
+      }
       navigate(from, { replace: true })
     }
   }, [isAuthenticated, navigate, location])
 
+  if (isLoading) {
+    return <FullPageLoader />
+  }
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await login(email, password)
+    try {
+      await login(email, password, rememberMe)
+    } catch (error) {
+      setError('Erreur de connexion. Veuillez vérifier vos identifiants.')
+    }
   }
 
   return (
@@ -74,15 +87,31 @@ const LoginPage = () => {
               />
             </Field>
           </div>
+          <Field className="mt-6 flex items-center">
+            <Input
+              id="remember-me"
+              name="remember-me"
+              type="checkbox"
+              className="h-4 w-4 rounded border-primary-300 text-secondary-600 focus:ring-secondary-500"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+            />
+            <Label
+              htmlFor="remember-me"
+              className="ml-2 block text-sm text-primary-900"
+            >
+              Se souvenir de moi
+            </Label>
+          </Field>
 
           <div>
-            <button
+            <Button
               type="submit"
               className="group relative flex w-full justify-center rounded-md border border-transparent bg-secondary-600 px-4 py-2 text-sm font-medium text-white hover:bg-secondary-700 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2"
               disabled={isLoading}
             >
               {isLoading ? 'Connexion...' : 'Se connecter'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
