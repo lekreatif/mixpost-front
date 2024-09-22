@@ -1,9 +1,8 @@
 .DS_Store
 .gitignore
-.prettierignore
-.prettierrc.json
 README.md
 eslint.config.js
+front_project_structure.txt
 index.html
 package.json
 pnpm-lock.yaml
@@ -21,6 +20,7 @@ src/App.tsx
 src/assets
 src/assets/react.svg
 src/components
+src/components/.DS_Store
 src/components/Auth
 src/components/Auth/IsSuperAdminRoute.tsx
 src/components/Auth/PrivateRoute.tsx
@@ -61,6 +61,7 @@ src/components/calendar/DayView.tsx
 src/components/calendar/MonthView.tsx
 src/components/calendar/WeekView.tsx
 src/components/layout
+src/components/layout/FullPageLoader.tsx
 src/components/layout/Layout.tsx
 src/components/layout/Logo.tsx
 src/contexts
@@ -75,6 +76,7 @@ src/hooks/useAuth.ts
 src/hooks/useCalendar.ts
 src/hooks/useCreatePost.ts
 src/hooks/useFormValidation.ts
+src/hooks/useIdleTimer.ts
 src/hooks/useLocalStoragePost.ts
 src/hooks/useMediaSelection.ts
 src/hooks/usePages.ts

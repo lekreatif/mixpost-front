@@ -9,7 +9,22 @@ export const api = axios.create({
 })
 
 let isRefreshing = false
+let failedQueue: Array<{
+  resolve: (value?: unknown) => void
+  reject: (reason?: any) => void
+}> = []
 let refreshPromise: Promise<void> | null = null
+
+const processQueue = (error: Error | null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error)
+    } else {
+      prom.resolve()
+    }
+  })
+  failedQueue = []
+}
 
 export const setIsRefreshing = (value: boolean) => {
   isRefreshing = value
@@ -27,19 +42,30 @@ api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as any
-    if (error.response?.status === 401 && !originalRequest?._retry) {
-      originalRequest._retry = true
-
+    if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
-        try {
-          await refreshPromise
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject })
+        }).then(() => {
           return api(originalRequest)
-        } catch (refreshError) {
-          return Promise.reject(refreshError)
-        }
+        }).catch((err) => {
+          return Promise.reject(err)
+        })
       }
 
-      return Promise.reject(error)
+      originalRequest._retry = true
+      isRefreshing = true
+
+      try {
+        await refreshAccessToken()
+        processQueue(null)
+        return api(originalRequest)
+      } catch (refreshError) {
+        processQueue(refreshError as Error)
+        return Promise.reject(refreshError)
+      } finally {
+        isRefreshing = false
+      }
     }
     return Promise.reject(error)
   }
@@ -119,4 +145,19 @@ export const getUsers = async () => api.get('/users')
 export const assignUsersToPage = async (pageId: string, userIds: number[]) =>
   api.post(`/pages/assign-users`, { pageId, userIds })
 
+export const resetInactivityTimer = () => {
+  // Cette fonction sera appelée à chaque requête API réussie
+  // pour réinitialiser le minuteur d'inactivité
+  window.dispatchEvent(new Event('user_activity'))
+}
+
+api.interceptors.response.use(
+  (response) => {
+    resetInactivityTimer()
+    return response
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
 export default api

@@ -17,6 +17,8 @@ import {
   getRefreshPromise,
 } from '../services/api'
 import { IUser } from '@/types'
+import { useIdleTimer } from '@/hooks/useIdleTimer'
+
 interface AuthContextType {
   isLoading: boolean
   error: string | null
@@ -27,6 +29,7 @@ interface AuthContextType {
   checkAuth: () => Promise<void>
   setError: (error: string | null) => void
   refreshToken: () => Promise<void | null>
+  resetIdleTimer: () => void
 }
 
 export const AuthContext = createContext<AuthContextType>({} as AuthContextType)
@@ -37,6 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [user, setUser] = useState<IUser | null>(null)
+  const resetIdleTimer = useIdleTimer()
 
   const checkAuth = useCallback(async () => {
     setIsLoading(true)
@@ -77,6 +81,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     checkAuth()
   }, [checkAuth])
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      resetIdleTimer()
+    }
+  }, [isAuthenticated, resetIdleTimer])
 
   const handleLogin = useCallback(
     async (email: string, password: string, rememberMe: boolean) => {
@@ -121,6 +131,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         checkAuth,
         refreshToken: handleRefreshToken,
         setError,
+        resetIdleTimer,
       }}
     >
       {children}
