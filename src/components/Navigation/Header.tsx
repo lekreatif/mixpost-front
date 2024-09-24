@@ -1,20 +1,20 @@
-import React, { useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
-import { USER_ROLE } from '@/types'
-import { CiSettings } from 'react-icons/ci'
-import { FiLogOut } from 'react-icons/fi'
+import React, { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { USER_ROLE } from "@/types";
+import { CiSettings } from "react-icons/ci";
+import { FiLogOut } from "react-icons/fi";
 
 const Header: React.FC = () => {
-  const { logout, user } = useAuth()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { logout, user } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const isSuperAdmin = useMemo(
     () => user?.role === USER_ROLE.SUPER_ADMIN,
     [user]
-  )
+  );
 
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   return (
     <header className="bg-white shadow">
@@ -134,7 +134,7 @@ const Header: React.FC = () => {
         )}
       </nav>
     </header>
-  )
-}
+  );
+};
 
-export default Header
+export default Header;

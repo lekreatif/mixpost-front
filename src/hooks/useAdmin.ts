@@ -36,8 +36,7 @@ export const useAdmin = () => {
       error,
     };
   };
-  const { socialAccounts, refetch: refetchSocialAccounts } =
-    useSocialAccounts();
+  const { refetch: refetchSocialAccounts } = useSocialAccounts();
 
   const addSocialAccountMutation = useMutation({
     mutationFn: (data: SocialAccount) => createSocialAccount(data),
@@ -56,6 +55,7 @@ export const useAdmin = () => {
       const response = await api.get(`/oauth/facebook/auth/${accountId}`);
       return response.data.url;
     } catch (err) {
+      console.log((err as Error).message);
       setError(
         "Erreur lors de la récupération de l'URL d'authentification Facebook"
       );

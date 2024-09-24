@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useAdmin } from "@/hooks/useAdmin";
 import { SocialAccount, IUser } from "@/types";
 import {
@@ -53,8 +53,7 @@ const SettingsPage: React.FC = () => {
   const [selectedPage, setSelectedPage] = useState<Page | null>(null);
   const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
   const { data: usersResult, isLoading: usersAreLoading } = useUsers();
-  const { socialAccounts, isLoading: socialAccountLoading } =
-    useSocialAccounts();
+  const { socialAccounts } = useSocialAccounts();
 
   const users = useMemo(() => {
     if (usersResult) {

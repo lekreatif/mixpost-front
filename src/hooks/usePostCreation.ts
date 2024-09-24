@@ -8,10 +8,7 @@ import { CreatePostContext } from "@/contexts/CreatePostContext";
 import localforage from "localforage";
 import { MediaType, PostType } from "@/types";
 
-export function determinePostType(
-  description: string,
-  medias: { type: MediaType }[]
-): PostType {
+export function determinePostType(medias: { type: MediaType }[]): PostType {
   if (medias.length === 0) {
     return PostType.TEXT;
   }
@@ -68,7 +65,7 @@ export const usePostCreation = () => {
         }));
       }
 
-      const postType = determinePostType(content, mediaUrls);
+      const postType = determinePostType(mediaUrls);
 
       const postData: PostData = {
         description: content,

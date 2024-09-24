@@ -4,9 +4,12 @@ import { SocialAccount, Page } from "../types";
 import { FaPlus } from "react-icons/fa";
 
 const AdminPage: React.FC = () => {
-  const { isLoading, error, socialAccounts, getFacebookAuthUrl } = useAdmin();
+  const { isLoading, error, useSocialAccounts, getFacebookAuthUrl } =
+    useAdmin();
 
-  const [pages, setPages] = useState<Page[]>([]);
+  const { socialAccounts } = useSocialAccounts();
+
+  const [pages] = useState<Page[]>([]);
   const [isAddingPage, setIsAddingPage] = useState(false);
 
   const handleAddPage = () => {
@@ -57,22 +60,23 @@ const AdminPage: React.FC = () => {
             <h3 className="mb-2 text-lg font-semibold">
               Sélectionnez un compte social :
             </h3>
-            {socialAccounts.map((account: SocialAccount) => (
-              <button
-                key={account.id}
-                onClick={() => handleSelectAccount(account.id)}
-                className="mb-2 mr-2 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-              >
-                {account.platform}
-              </button>
-            ))}
+            {socialAccounts &&
+              socialAccounts.map((account: SocialAccount) => (
+                <button
+                  key={account.id}
+                  onClick={() => handleSelectAccount(account.id)}
+                  className="mb-2 mr-2 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+                >
+                  {account.platform}
+                </button>
+              ))}
           </div>
         )}
 
         <div className="mt-4">
           <h3 className="mb-2 text-lg font-semibold">Pages Facebook :</h3>
           {pages.map(page => (
-            <div key={page.id} className="mb-2 rounded border p-2">
+            <div key={page.pageId} className="mb-2 rounded border p-2">
               {page.name}
             </div>
           ))}
