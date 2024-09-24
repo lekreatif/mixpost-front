@@ -1,9 +1,9 @@
 import axios, { AxiosResponse, AxiosError, CancelTokenSource } from "axios";
 import { IUser, SocialAccount, Page } from "@/types";
 
-const { NODE_ENV, VITE_API_URL } = import.meta.env;
+const { VITE_NODE_ENV, VITE_API_URL } = import.meta.env;
 
-const API_URL = NODE_ENV === "development" ? "/api" : VITE_API_URL;
+const API_URL = VITE_NODE_ENV === "development" ? "/api" : VITE_API_URL;
 
 export const api = axios.create({
   baseURL: API_URL,
