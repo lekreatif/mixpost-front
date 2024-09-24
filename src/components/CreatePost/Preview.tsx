@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react'
-import { useCreatePost } from '@/hooks/useCreatePost'
 import { MediaType, Page } from '@/types'
 import { SlLike } from 'react-icons/sl'
 import { FaRegComment } from 'react-icons/fa6'
@@ -10,6 +9,7 @@ import {
   ThreeImageDisplay,
   FourImageDisplay,
 } from './ImagesDisplay'
+import { usePostCreation } from '@/hooks/usePostCreation';
 
 const RenderMediaPreview = ({
   mediaType,
@@ -138,7 +138,7 @@ const RenderPagePreview = ({
 
 const Preview: React.FC = React.memo(() => {
   const { selectedPages, content, mediaType, isPublic, medias } =
-    useCreatePost()
+    usePostCreation()
 
   const RenderedPreviewsMemo = useMemo(
     () =>

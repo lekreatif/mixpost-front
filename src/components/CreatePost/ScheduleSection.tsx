@@ -1,13 +1,12 @@
 import React from 'react'
-import { useCreatePost } from '@/hooks/useCreatePost'
-import { Switch, Field, Label, Input } from '@headlessui/react'
+import { Switch, Field, Label } from '@headlessui/react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import { CalendarIcon, ClockIcon } from '@heroicons/react/24/outline'
+import { usePostCreation } from '@/hooks/usePostCreation';
 
 const ScheduleSection: React.FC = () => {
   const { isScheduled, setIsScheduled, scheduledDate, setScheduledDate } =
-    useCreatePost()
+    usePostCreation()
 
   const minDate = new Date(Date.now() + 30 * 60 * 1000)
   const maxDate = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)

@@ -1,11 +1,11 @@
 import React from 'react'
-import { useCreatePost } from '@/hooks/useCreatePost'
 import { Radio, RadioGroup } from '@headlessui/react'
 import { CheckCircleIcon } from '@heroicons/react/24/solid'
 import { FaGlobe, FaLock } from 'react-icons/fa'
+import { usePostCreation } from '@/hooks/usePostCreation';
 
 const VisibilitySection: React.FC = () => {
-  const { isPublic, setIsPublic } = useCreatePost()
+  const { isPublic, setIsPublic } = usePostCreation()
 
   const visibilityOptions = [
     {

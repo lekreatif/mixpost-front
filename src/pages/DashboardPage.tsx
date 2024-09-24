@@ -1,16 +1,17 @@
-import { useFacebookPages } from '@/hooks/useApi'
-import { useCalendar } from '@/hooks/useCalendar'
-import { Page } from '@/types'
-import { Checkbox, Field } from '@headlessui/react'
-import { BsCheckLg } from 'react-icons/bs'
-import { CalendarHeader } from '@/components/calendar/CalendarHeader'
-import { MonthView } from '@/components/calendar/MonthView'
-import { WeekView } from '@/components/calendar/WeekView'
-import { DayView } from '@/components/calendar/DayView'
-import { FullPageLoader } from '@/components/layout/FullPageLoader'
+import { useCalendar } from "@/hooks/useCalendar";
+import { Checkbox, Field } from "@headlessui/react";
+import { BsCheckLg } from "react-icons/bs";
+import { CalendarHeader } from "@/components/calendar/CalendarHeader";
+import { MonthView } from "@/components/calendar/MonthView";
+import { WeekView } from "@/components/calendar/WeekView";
+import { DayView } from "@/components/calendar/DayView";
+import { FullPageLoader } from "@/components/layout/FullPageLoader";
+import { usePages } from "@/hooks/usePages";
+import { useAuth } from "@/hooks/useAuth";
 
 const DashboardPage = () => {
-  const { data: pages, isLoading, error } = useFacebookPages()
+  const { isLoading, error } = useAuth();
+  const { pages, isLoading: pagesLoading, error: pagesError } = usePages();
   const {
     currentDate,
     view,
@@ -24,10 +25,10 @@ const DashboardPage = () => {
     weekDayNames,
     setCurrentDate,
     isMobile,
-  } = useCalendar()
+  } = useCalendar();
 
-  if (isLoading) return <div>Chargement...</div>
-  if (error) return <div>Erreur : {error.message}</div>
+  if (isLoading) return <div>Chargement...</div>;
+  if (error) return <div>Erreur : {error}</div>;
 
   return (
     <>
@@ -41,25 +42,42 @@ const DashboardPage = () => {
                 <h2 className="text-sm font-medium">Vos Pages:</h2>
               </div>
               <div className="flex flex-wrap gap-1">
-                {pages.map((page: Page) => (
-                  <Field key={page.name}>
-                    <Checkbox className="group flex flex-col justify-center">
-                      <div className="relative inline-block aspect-square w-9 cursor-pointer rounded-full border-2 border-primary-300 group-data-[checked]:border-secondary-600">
-                        <img
-                          className="pointer-events-none aspect-square w-full touch-none rounded-full object-cover object-center grayscale group-data-[checked]:grayscale-0"
-                          src={page.profilePictureUrl}
-                          alt={page.name}
-                        />
-                        <span className="absolute right-0 top-[20%] hidden h-4 w-4 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full border-2 border-secondary-600 bg-primary-50 p-0.5 group-data-[checked]:flex">
-                          <BsCheckLg className="inline-block h-full w-full text-secondary-600" />
+                {pagesLoading ? (
+                  <div className="flex flex-wrap gap-1">
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <Field key={index}>
+                        <Checkbox className="group flex flex-col justify-center gap-1 items-center">
+                          <div className="relative inline-block aspect-square w-9 cursor-pointer rounded-full border-2 border-primary-100 bg-primary-200 animate-pulse">
+                            <div className="aspect-square w-full rounded-full bg-primary-200"></div>
+                          </div>
+                        </Checkbox>
+                      </Field>
+                    ))}
+                  </div>
+                ) : pagesError ? (
+                  <span>Erreur lors du chargement des pages</span>
+                ) : (
+                  pages &&
+                  pages.map(page => (
+                    <Field key={page.name}>
+                      <Checkbox className="group flex flex-col justify-center">
+                        <div className="relative inline-block aspect-square w-9 cursor-pointer rounded-full border-2 border-primary-300 group-data-[checked]:border-secondary-600">
+                          <img
+                            className="pointer-events-none aspect-square w-full touch-none rounded-full object-cover object-center primaryscale group-data-[checked]:primaryscale-0"
+                            src={page.profilePictureUrl}
+                            alt={page.name}
+                          />
+                          <span className="absolute right-0 top-[20%] hidden h-4 w-4 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full border-2 border-secondary-600 bg-primary-50 p-0.5 group-data-[checked]:flex">
+                            <BsCheckLg className="inline-block h-full w-full text-secondary-600" />
+                          </span>
+                        </div>
+                        <span className="line-clamp-1 w-12 text-xs font-light text-primary-400 group-data-[checked]:text-primary-600">
+                          {page.name}
                         </span>
-                      </div>
-                      <span className="line-clamp-1 w-12 text-xs font-light text-primary-400 group-data-[checked]:text-primary-600">
-                        {page.name}
-                      </span>
-                    </Checkbox>
-                  </Field>
-                ))}
+                      </Checkbox>
+                    </Field>
+                  ))
+                )}
               </div>
             </div>
             <div className="flex flex-1 flex-col rounded-lg border bg-primary-50 p-1 md:p-6">
@@ -75,7 +93,7 @@ const DashboardPage = () => {
               />
               {isMobile ? (
                 <DayView currentDate={currentDate} />
-              ) : view === 'month' ? (
+              ) : view === "month" ? (
                 <MonthView
                   monthDays={monthDays}
                   firstDayOfMonth={firstDayOfMonth}
@@ -89,7 +107,7 @@ const DashboardPage = () => {
         )}
       </div>
     </>
-  )
-}
+  );
+};
 
-export default DashboardPage
+export default DashboardPage;

@@ -4,6 +4,14 @@ export enum USER_ROLE {
   USER = 'USER',
 }
 
+export enum PostType {
+  IMAGE = "IMAGE",
+  VIDEO = "VIDEO",
+  REEL = "REEL",
+  STORY = "STORY",
+  TEXT = "TEXT"
+}
+
 export enum MediaType {
   IMAGE = 'IMAGE',
   VIDEO = 'VIDEO',
@@ -41,9 +49,10 @@ export interface PostData {
   description: string
   isPublic: boolean
   mediaType: MediaType | null
+  postType: PostType
   scheduledFor?: number
   pagesIds: string[]
-  medias: { url: string }[]
+  medias: { url: string, type: MediaType }[]
   videoTitle?: string
   thumbnailUrl?: string
 }

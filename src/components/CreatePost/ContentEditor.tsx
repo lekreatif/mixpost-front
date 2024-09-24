@@ -1,9 +1,9 @@
 import React, { useRef, useEffect } from 'react'
-import { useCreatePost } from '@/hooks/useCreatePost'
 import { Field, Textarea } from '@headlessui/react'
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react'
 import { GrEmoji } from 'react-icons/gr'
 import EmojiPicker, { EmojiClickData, Categories } from 'emoji-picker-react'
+import { usePostCreation } from '@/hooks/usePostCreation';
 
 const emojiesCategories = [
   {
@@ -41,7 +41,7 @@ const emojiesCategories = [
 ]
 
 const ContentEditor: React.FC = () => {
-  const { content, setContent } = useCreatePost()
+  const { content, setContent } = usePostCreation()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {

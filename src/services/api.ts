@@ -1,129 +1,133 @@
-import axios, { AxiosResponse, AxiosError } from 'axios'
-import { IUser, SocialAccount } from '@/types'
+import axios, { AxiosResponse, AxiosError, CancelTokenSource } from "axios";
+import { IUser, SocialAccount, Page } from "@/types";
 
-const API_URL = '/api'
+const API_URL = "/api";
 
 export const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,
-})
+});
 
-let isRefreshing = false
+let refreshPromise: Promise<void> | null = null;
+let isRefreshing = false;
 let failedQueue: Array<{
-  resolve: (value?: unknown) => void
-  reject: (reason?: any) => void
-}> = []
-let refreshPromise: Promise<void> | null = null
+  resolve: (value?: unknown) => void;
+  reject: (reason?: any) => void;
+}> = [];
+let cancelTokenSource: CancelTokenSource | null = null;
 
 const processQueue = (error: Error | null) => {
-  failedQueue.forEach((prom) => {
+  failedQueue.forEach(prom => {
     if (error) {
-      prom.reject(error)
+      prom.reject(error);
     } else {
-      prom.resolve()
+      prom.resolve();
     }
-  })
-  failedQueue = []
-}
-
-export const setIsRefreshing = (value: boolean) => {
-  isRefreshing = value
-}
-
-export const getIsRefreshing = () => isRefreshing
-
-export const setRefreshPromise = (promise: Promise<void> | null) => {
-  refreshPromise = promise
-}
-
-export const getRefreshPromise = () => refreshPromise
+  });
+  failedQueue = [];
+};
 
 api.interceptors.response.use(
-  (response) => response,
+  response => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as any
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject })
-        }).then(() => {
-          return api(originalRequest)
-        }).catch((err) => {
-          return Promise.reject(err)
-        })
+    const originalRequest = error.config as any;
+    if (error.response?.status === 401) {
+      if (originalRequest.url === "/auth/refresh") {
+        isRefreshing = false;
+        const error = new Error("Vous devez vous connecter");
+        processQueue(error);
+        throw error;
       }
 
-      originalRequest._retry = true
-      isRefreshing = true
+      if (!originalRequest._retry) {
+        if (isRefreshing) {
+          return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+          })
+            .then(() => {
+              return api(originalRequest);
+            })
+            .catch(err => {
+              return Promise.reject(err);
+            });
+        }
 
-      try {
-        await refreshAccessToken()
-        processQueue(null)
-        return api(originalRequest)
-      } catch (refreshError) {
-        processQueue(refreshError as Error)
-        return Promise.reject(refreshError)
-      } finally {
-        isRefreshing = false
+        originalRequest._retry = true;
+        isRefreshing = true;
+
+        try {
+          await refreshAccessToken();
+          processQueue(null);
+          return api(originalRequest);
+        } finally {
+          isRefreshing = false;
+        }
       }
     }
-    return Promise.reject(error)
+    throw error;
   }
-)
+);
+
+api.interceptors.request.use(
+  config => {
+    if (isRefreshing) {
+      if (cancelTokenSource) {
+        cancelTokenSource.cancel("Request canceled due to token refreshing.");
+      }
+      cancelTokenSource = axios.CancelToken.source();
+      config.cancelToken = cancelTokenSource.token;
+    }
+    return config;
+  },
+  error => {
+    return Promise.reject(error);
+  }
+);
 
 export const refreshAccessToken = async (): Promise<void> => {
-  try {
-    await api.post('/auth/refresh')
-  } catch (error) {
-    console.error('Failed to refresh token:', error)
-    throw error
-  }
-}
+  await api.post("/auth/refresh");
+};
+
+export const setIsRefreshing = (value: boolean) => {
+  isRefreshing = value;
+};
+
+export const getIsRefreshing = () => isRefreshing;
+
+export const setRefreshPromise = (promise: Promise<void> | null) => {
+  refreshPromise = promise;
+};
+
+export const getRefreshPromise = () => refreshPromise;
 
 export const login = async (
   email: string,
   password: string,
   rememberMe: boolean
 ): Promise<void> => {
-  await api.post('/auth/login', { email, password, rememberMe })
-}
+  await api.post("/auth/login", { email, password, rememberMe });
+};
+export const logout = async (): Promise<void> => await api.post("/auth/logout");
 
-export const logout = async (): Promise<void> => {
-  await api.post('/auth/logout')
-  // Le serveur invalide le token et supprime le cookie
-}
-
-export const getMyPages = () => api.get('/pages/my-pages')
-
+export const getMyPages = (): Promise<AxiosResponse<Page[]>> =>
+  api.get("/pages/my-pages");
 export const getUser: () => Promise<AxiosResponse<IUser>> = async () =>
-  api.get('/users/me')
-
+  api.get("/users/me");
 export const getFacebookAuthUrl = async (): Promise<string> => {
-  const response = await api.get('/auth/facebook/url')
-  return response.data.url
-}
+  const response = await api.get("/auth/facebook/url");
+  return response.data.url;
+};
+export const getSocialAccounts = async (): Promise<
+  AxiosResponse<SocialAccount[]>
+> => api.get("/social-accounts");
 
-export const getAdminFacebookPages = async () => {
-  const response = await api.get('/pages')
-  return response.data
-}
-
-export const getUserFacebookPages = async () => {
-  const response = await api.get('/pages/my-pages')
-  return response.data
-}
+export const getUsers = async () => api.get("/users");
 
 export const addFacebookPage = async (pageId: string) => {
-  await api.post('/facebook/pages', { pageId })
-}
-
-export const getSocialAccounts = async () => {
-  const response = await api.get('/social-accounts')
-  return response.data
-}
-
+  await api.post("/facebook/pages", { pageId });
+};
 export const createSocialAccount = async (data: SocialAccount) =>
-  api.post('/social-accounts', { ...data })
+  api.post("/social-accounts", { ...data });
 
 export const updateSocialAccount = async (
   accountData: SocialAccount
@@ -131,33 +135,30 @@ export const updateSocialAccount = async (
   const response = await api.put(
     `/social-accounts/${accountData.id}`,
     accountData
-  )
-  return response.data as SocialAccount
-}
-
-export const createUser = async (data: IUser) => api.post('/users', { ...data })
+  );
+  return response.data as SocialAccount;
+};
+export const createUser = async (data: IUser) =>
+  api.post("/users", { ...data });
 export const updateUser = async (data: IUser) =>
-  api.put(`/users/${data.email}`, data)
+  api.put(`/users/${data.email}`, data);
 export const deleteUser = async (userId: number) =>
-  api.delete(`/users/${userId}`)
-export const getUsers = async () => api.get('/users')
+  api.delete(`/users/${userId}`);
 
 export const assignUsersToPage = async (pageId: string, userIds: number[]) =>
-  api.post(`/pages/assign-users`, { pageId, userIds })
+  api.post(`/pages/assign-users`, { pageId, userIds });
 
 export const resetInactivityTimer = () => {
-  // Cette fonction sera appelée à chaque requête API réussie
-  // pour réinitialiser le minuteur d'inactivité
-  window.dispatchEvent(new Event('user_activity'))
-}
+  window.dispatchEvent(new Event("user_activity"));
+};
 
 api.interceptors.response.use(
-  (response) => {
-    resetInactivityTimer()
-    return response
+  response => {
+    resetInactivityTimer();
+    return response;
   },
-  (error) => {
-    return Promise.reject(error)
+  error => {
+    return Promise.reject(error);
   }
-)
-export default api
+);
+export default api;

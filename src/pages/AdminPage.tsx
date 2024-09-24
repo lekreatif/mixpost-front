@@ -1,48 +1,38 @@
-import React, { useState, useEffect } from 'react'
-import { useAdmin } from '@/hooks/useAdmin'
-import { SocialAccount, Page } from '../types'
-import { FaPlus } from 'react-icons/fa'
+import React, { useState } from "react";
+import { useAdmin } from "@/hooks/useAdmin";
+import { SocialAccount, Page } from "../types";
+import { FaPlus } from "react-icons/fa";
 
 const AdminPage: React.FC = () => {
-  const {
-    getSocialAccounts,
-    isLoading,
-    error,
-    socialAccounts,
-    getFacebookAuthUrl,
-  } = useAdmin()
+  const { isLoading, error, socialAccounts, getFacebookAuthUrl } = useAdmin();
 
-  const [pages, setPages] = useState<Page[]>([])
-  const [isAddingPage, setIsAddingPage] = useState(false)
-
-  useEffect(() => {
-    getSocialAccounts.mutateAsync()
-  }, [])
+  const [pages, setPages] = useState<Page[]>([]);
+  const [isAddingPage, setIsAddingPage] = useState(false);
 
   const handleAddPage = () => {
-    setIsAddingPage(true)
-  }
+    setIsAddingPage(true);
+  };
 
   const handleSelectAccount = async (accountId: number) => {
     try {
-      const authUrl = await getFacebookAuthUrl(accountId.toString())
-      window.location.href = authUrl
+      const authUrl = await getFacebookAuthUrl(accountId.toString());
+      window.location.href = authUrl;
     } catch (err) {
       console.error(
         "Erreur lors de la récupération de l'URL d'authentification:",
         err
-      )
+      );
     }
-  }
+  };
 
   if (isLoading)
     return (
       <div className="flex h-screen items-center justify-center">
         Chargement...
       </div>
-    )
+    );
   if (error)
-    return <div className="text-center text-red-500">Erreur : {error}</div>
+    return <div className="text-center text-red-500">Erreur : {error}</div>;
 
   return (
     <>
@@ -81,7 +71,7 @@ const AdminPage: React.FC = () => {
 
         <div className="mt-4">
           <h3 className="mb-2 text-lg font-semibold">Pages Facebook :</h3>
-          {pages.map((page) => (
+          {pages.map(page => (
             <div key={page.id} className="mb-2 rounded border p-2">
               {page.name}
             </div>
@@ -89,7 +79,7 @@ const AdminPage: React.FC = () => {
         </div>
       </div>
     </>
-  )
-}
+  );
+};
 
-export default AdminPage
+export default AdminPage;

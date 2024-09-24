@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
-import { useCreatePost } from './useCreatePost'
 import { MediaType } from '@/types'
+import { usePostCreation } from '@/hooks/usePostCreation';
 
 export const useMediaSelection = () => {
   const {
@@ -12,7 +12,7 @@ export const useMediaSelection = () => {
     setVideoTitle,
     thumbnail,
     setThumbnail,
-  } = useCreatePost()
+  } = usePostCreation()
 
   const [customThumbnail, setCustomThumbnail] = useState<Blob | null>(null)
   const [suggestedThumbnails, setSuggestedThumbnails] = useState<Blob[]>([])

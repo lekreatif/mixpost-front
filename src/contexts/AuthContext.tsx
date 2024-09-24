@@ -45,9 +45,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const checkAuth = useCallback(async () => {
     setIsLoading(true)
     try {
-      if (getIsRefreshing()) {
-        await getRefreshPromise()
-      }
       const userData = await getUser()
       setUser(userData.data as IUser)
       setIsAuthenticated(true)
@@ -56,6 +53,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsAuthenticated(false)
       setUser(null)
       setError('Session expirée')
+      // si je ne suis pas deja sur la page de login je veux navigate()
     } finally {
       setIsLoading(false)
     }
@@ -79,7 +77,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [])
 
   useEffect(() => {
-    checkAuth()
+      checkAuth()
   }, [checkAuth])
 
   useEffect(() => {

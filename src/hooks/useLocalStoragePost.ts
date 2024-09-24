@@ -1,22 +1,27 @@
 import { useState, useEffect, useCallback } from 'react'
 import localforage from 'localforage'
+import { useAuth } from './useAuth'
 
 export function useLocalStoragePost<T>(key: string, initialValue: T) {
+  const { user } = useAuth();
+  const userId = user?.id || 'anonymous';
+  const fullKey = `user_${userId}_${key}`;
+
   const [storedValue, setStoredValue] = useState<T>(initialValue)
 
   useEffect(() => {
     const loadStoredValue = async () => {
       try {
-        const value = await localforage.getItem<T>(key)
+        const value = await localforage.getItem<T>(fullKey)
         if (value !== null) {
           setStoredValue(value)
         }
       } catch (error) {
-        console.error(`Error loading ${key} from IndexedDB:`, error)
+        console.error(`Error loading ${fullKey} from IndexedDB:`, error)
       }
     }
     loadStoredValue()
-  }, [key])
+  }, [fullKey])
 
   const setValue = useCallback(
     async (value: T | ((val: T) => T)) => {
@@ -24,12 +29,12 @@ export function useLocalStoragePost<T>(key: string, initialValue: T) {
         const valueToStore =
           value instanceof Function ? value(storedValue) : value
         setStoredValue(valueToStore)
-        await localforage.setItem(key, valueToStore)
+        await localforage.setItem(fullKey, valueToStore)
       } catch (error) {
-        console.error(`Error saving ${key} to IndexedDB:`, error)
+        console.error(`Error saving ${fullKey} to IndexedDB:`, error)
       }
     },
-    [key, storedValue]
+    [fullKey, storedValue]
   )
 
   return [storedValue, setValue] as const

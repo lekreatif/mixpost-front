@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState } from "react";
 import api, {
   createUser,
   createSocialAccount,
@@ -7,100 +7,106 @@ import api, {
   updateUser,
   getUsers,
   assignUsersToPage,
-} from '../services/api'
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { SocialAccount, IUser } from '@/types'
-import { useAuth } from './useAuth'
-import { AxiosResponse } from 'axios'
-import { useFacebookPages } from './useApi'
-export const useAdmin = () => {
-  const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const { refetch: refetchfacebookPages } = useFacebookPages()
+  getSocialAccounts,
+} from "../services/api";
+import { useMutation } from "@tanstack/react-query";
+import { SocialAccount, IUser } from "@/types";
+import { usePages } from "./usePages";
+import { useAuthenticatedQuery } from "./useAuthenticatedQuery";
 
-  const getSocialAccounts = useMutation({
-    mutationFn: async () => {
-      setIsLoading(true)
-      try {
-        const response = await api.get('/social-accounts')
-        setSocialAccounts(response.data)
-      } catch (err) {
-        setError('Erreur lors de la récupération des comptes sociaux')
-      } finally {
-        setIsLoading(false)
-      }
-    },
-  })
+export const useAdmin = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { refetch: refetchMyPages } = usePages();
+
+  const useSocialAccounts = () => {
+    const {
+      data: res,
+      isLoading,
+      isRefetching,
+      error,
+      refetch,
+    } = useAuthenticatedQuery("socialAccounts", getSocialAccounts, true);
+
+    return {
+      socialAccounts: res ? res.data : null,
+      isLoading,
+      refetch,
+      isRefetching,
+      error,
+    };
+  };
+  const { socialAccounts, refetch: refetchSocialAccounts } =
+    useSocialAccounts();
 
   const addSocialAccountMutation = useMutation({
     mutationFn: (data: SocialAccount) => createSocialAccount(data),
     onSuccess: () => {
-      getSocialAccounts.mutate()
+      refetchSocialAccounts();
     },
-  })
+  });
 
   const editSocialAccount = useMutation({
     mutationFn: (data: SocialAccount) => updateSocialAccount(data),
-    onSuccess: () => {
-      getSocialAccounts.mutate()
-    },
-  })
+    onSuccess: () => refetchSocialAccounts(),
+  });
 
   const getFacebookAuthUrl = async (accountId: string) => {
     try {
-      const response = await api.get(`/oauth/facebook/auth/${accountId}`)
-      return response.data.url
+      const response = await api.get(`/oauth/facebook/auth/${accountId}`);
+      return response.data.url;
     } catch (err) {
       setError(
         "Erreur lors de la récupération de l'URL d'authentification Facebook"
-      )
+      );
     }
-  }
+  };
 
-  const useUsers = () => {
-    const { isAuthenticated } = useAuth()
-    return useQuery<Promise<AxiosResponse<IUser[]>>>({
-      queryKey: ['users'],
-      queryFn: getUsers,
-      enabled: isAuthenticated,
-    })
-  }
+  const useUsers = () => useAuthenticatedQuery("getUsers", getUsers, true);
+  const { refetch: refetchUsers } = useUsers();
 
   const addUserMutation = useMutation({
     mutationFn: (data: IUser) => createUser(data),
-  })
+    onSuccess: () => {
+      refetchUsers();
+    },
+  });
 
   const editUserMutation = useMutation({
     mutationFn: updateUser,
-  })
+    onSuccess: () => {
+      refetchUsers();
+    },
+  });
 
   const deleteUserMutation = useMutation({
     mutationFn: deleteUser,
-  })
+    onSuccess: () => {
+      refetchUsers();
+    },
+  });
 
   const assignUsersToPageMutation = useMutation({
     mutationFn: ({
       pageId,
       userIds,
     }: {
-      pageId: string
-      userIds: number[]
+      pageId: string;
+      userIds: number[];
     }) => {
-      setIsLoading(true)
-      return assignUsersToPage(pageId, userIds)
+      setIsLoading(true);
+      return assignUsersToPage(pageId, userIds);
     },
     onSuccess: () => {
-      refetchfacebookPages()
-      setIsLoading(false)
+      refetchMyPages();
+      setIsLoading(false);
     },
-  })
+  });
 
   return {
-    socialAccounts,
     isLoading,
     error,
-    getSocialAccounts,
+    useSocialAccounts,
     addSocialAccountMutation,
     editSocialAccount,
     getFacebookAuthUrl,
@@ -109,5 +115,5 @@ export const useAdmin = () => {
     editUserMutation,
     deleteUserMutation,
     assignUsersToPageMutation,
-  }
-}
+  };
+};

@@ -1,34 +1,20 @@
-import { useState, useEffect } from 'react'
-import { getMyPages } from '../services/api'
-
-export interface Page {
-  id: number
-  name: string
-  pageId: string
-}
+import { getMyPages } from "../services/api";
+import { useAuthenticatedQuery } from "./useAuthenticatedQuery";
 
 export const usePages = () => {
-  const [pages, setPages] = useState<Page[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const {
+    data: res,
+    isLoading,
+    refetch,
+    isRefetching,
+    error,
+  } = useAuthenticatedQuery("userPages", getMyPages);
 
-  useEffect(() => {
-    const fetchPages = async () => {
-      setIsLoading(true)
-      setError(null)
-      try {
-        const response = await getMyPages()
-        setPages(response.data)
-      } catch (err: unknown) {
-        setError('Erreur lors de la récupération des pages')
-        console.error(err)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchPages()
-  }, [])
-
-  return { pages, isLoading, error }
-}
+  return {
+    pages: res ? res.data : null,
+    isLoading,
+    refetch,
+    isRefetching,
+    error,
+  };
+};

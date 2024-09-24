@@ -1,5 +1,6 @@
 .DS_Store
 .gitignore
+.prettierrc.json
 README.md
 eslint.config.js
 front_project_structure.txt
@@ -47,6 +48,7 @@ src/components/Navigation
 src/components/Navigation/Header.tsx
 src/components/Navigation/Sidebar.tsx
 src/components/Settings
+src/components/Settings/.DS_Store
 src/components/Settings/ConnectNewPageButton.tsx
 src/components/Settings/ConnectedPagesList.tsx
 src/components/Settings/PageDetailsModal.tsx
@@ -73,14 +75,15 @@ src/hooks/isMobile.ts
 src/hooks/useAdmin.ts
 src/hooks/useApi.ts
 src/hooks/useAuth.ts
+src/hooks/useAuthenticatedQuery.ts
 src/hooks/useCalendar.ts
-src/hooks/useCreatePost.ts
 src/hooks/useFormValidation.ts
 src/hooks/useIdleTimer.ts
 src/hooks/useLocalStoragePost.ts
 src/hooks/useMediaSelection.ts
 src/hooks/usePages.ts
 src/hooks/usePostApi.ts
+src/hooks/usePostCreation.ts
 src/hooks/useUpload.ts
 src/hooks/useVideoThumbnails.ts
 src/index.css
