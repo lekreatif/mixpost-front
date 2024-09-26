@@ -4,17 +4,18 @@ import {
   getSocialAccounts,
   getFacebookAuthUrl,
 } from "../services/api";
-import { useAuth } from "./useAuth";
 import { useAuthenticatedQuery } from "./useAuthenticatedQuery";
+import { useIsAuthenticated } from "./useIsAuthenticated";
 
 export const useUser = () => useAuthenticatedQuery(["user"], getUser);
 
 export const useSocialAccounts = () => {
-  const { isAuthenticated } = useAuth();
+  const { data } = useIsAuthenticated();
+
   return useQuery({
     queryKey: ["socialAccounts"],
     queryFn: getSocialAccounts,
-    enabled: isAuthenticated,
+    enabled: data?.data.isAuthenticated,
     staleTime: 5 * 60 * 1000,
   });
 };

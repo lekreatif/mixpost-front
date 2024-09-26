@@ -12,9 +12,8 @@ import { RxDashboard } from "react-icons/rx";
 import { USER_ROLE } from "@/types";
 import Logo from "../layout/Logo";
 import { IoIosClose } from "react-icons/io";
-import { useQueryClient } from "@tanstack/react-query";
 import { useUser } from "@/hooks/useMe";
-import { logout } from "@/services/api";
+import { useLogout } from "@/hooks/useLogout";
 
 export default function Sidebar({
   sidebarOpen,
@@ -23,18 +22,12 @@ export default function Sidebar({
   sidebarOpen: boolean;
   setSidebarOpen: (val: boolean) => void;
 }) {
-  const queryClient = useQueryClient();
   const { data: userData } = useUser();
+  const { mutate: logout } = useLogout();
 
   const handleLogout = async (event: MouseEvent<HTMLButtonElement>) => {
-    try {
-      event.preventDefault();
-      await logout();
-      queryClient.clear();
-      return (window.location.href = "/login");
-    } catch (e) {
-      console.log((e as Error).message);
-    }
+    event.preventDefault();
+    return logout();
   };
 
   const isSuperAdmin = useMemo(

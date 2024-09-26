@@ -28,7 +28,9 @@ export const useFormValidation = <T extends z.ZodType<any, any>>(
   const validateField = useCallback(
     async (name: string, value: any) => {
       try {
-        await schema.pick({ [name]: true }).parseAsync({ [name]: value });
+        await (schema as unknown as z.ZodObject<any>)
+          .pick({ [name]: true })
+          .parseAsync({ [name]: value });
         setErrors(prev => ({ ...prev, [name]: undefined }) as ValidationError);
       } catch (err) {
         if (err instanceof z.ZodError) {
