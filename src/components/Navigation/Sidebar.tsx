@@ -9,10 +9,12 @@ import {
 import { IoSettingsOutline, IoLogOutOutline } from "react-icons/io5";
 import { NavLink } from "react-router-dom";
 import { RxDashboard } from "react-icons/rx";
-import { useAuth } from "@/hooks/useAuth";
 import { USER_ROLE } from "@/types";
 import Logo from "../layout/Logo";
 import { IoIosClose } from "react-icons/io";
+import { useQueryClient } from "@tanstack/react-query";
+import { useUser } from "@/hooks/useMe";
+import { logout } from "@/services/api";
 
 export default function Sidebar({
   sidebarOpen,
@@ -21,15 +23,23 @@ export default function Sidebar({
   sidebarOpen: boolean;
   setSidebarOpen: (val: boolean) => void;
 }) {
-  const { logout, user } = useAuth();
-  const handleLogout = (event: MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-    logout();
+  const queryClient = useQueryClient();
+  const { data: userData } = useUser();
+
+  const handleLogout = async (event: MouseEvent<HTMLButtonElement>) => {
+    try {
+      event.preventDefault();
+      await logout();
+      queryClient.clear();
+      return (window.location.href = "/login");
+    } catch (e) {
+      console.log((e as Error).message);
+    }
   };
 
   const isSuperAdmin = useMemo(
-    () => user?.role === USER_ROLE.SUPER_ADMIN,
-    [user]
+    () => (userData ? userData.data.role === USER_ROLE.SUPER_ADMIN : false),
+    [userData]
   );
   return (
     <>

@@ -1,5 +1,5 @@
 import React from "react";
-import { IUser } from "@/types";
+import { IUser, USER_ROLE } from "@/types";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { z } from "zod";
 import { Field, Label, Input, Select, Button } from "@headlessui/react";
@@ -18,7 +18,10 @@ const userSchema = z.object({
 const UserForm: React.FC<UserFormProps> = ({ user, onSubmit, onCancel }) => {
   const { values, handleChange, errors, validate } = useFormValidation(
     userSchema,
-    user
+    user ?? {
+      email: "",
+      role: USER_ROLE.USER,
+    }
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,7 +44,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSubmit, onCancel }) => {
           type="email"
           id="email"
           name="email"
-          value={values.email}
+          value={values.email ?? ""}
           onChange={handleChange}
           className="border-primary-300 focus:border-secondary-500 focus:ring-secondary-500 mt-1 block h-10 w-full rounded-md border py-2 pl-3 pr-10 text-base focus:outline-none sm:text-sm"
         />
@@ -60,7 +63,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSubmit, onCancel }) => {
         <Select
           id="role"
           name="role"
-          value={values.role}
+          value={values.role ?? USER_ROLE.USER}
           onChange={handleChange}
           className="border-primary-300 focus:border-secondary-500 focus:ring-secondary-500 mt-1 block h-10 w-full rounded-md border py-2 pl-3 pr-10 text-base focus:outline-none sm:text-sm"
         >

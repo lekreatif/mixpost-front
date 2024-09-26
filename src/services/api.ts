@@ -104,11 +104,22 @@ export const login = async (
   email: string,
   password: string,
   rememberMe: boolean
-): Promise<void> => {
-  await api.post("/auth/login", { email, password, rememberMe });
+): Promise<AxiosResponse<{ isAuthenticated: boolean }>> => {
+  return api.post("/auth/login", { email, password, rememberMe });
 };
 export const logout = async (): Promise<void> => await api.post("/auth/logout");
 
+export const choosePassword = ({
+  userId,
+  password,
+}: {
+  userId: number;
+  password: string;
+}) => api.put(`/users/${userId}/choose-password`, { password });
+
+export const getAuthState = (): Promise<
+  AxiosResponse<{ isAuthenticated: boolean }>
+> => api.get("/auth/auth-state");
 export const getMyPages = (): Promise<AxiosResponse<Page[]>> =>
   api.get("/pages/my-pages");
 export const getUser: () => Promise<AxiosResponse<IUser>> = async () =>

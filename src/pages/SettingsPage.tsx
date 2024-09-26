@@ -49,7 +49,9 @@ const SettingsPage: React.FC = () => {
   );
   const { pages, isLoading: pagesLoading } = usePages();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalAction, setModalAction] = useState<E_MODAL_ACTIONS | null>(null);
+  const [modalAction, setModalAction] = useState<E_MODAL_ACTIONS>(
+    E_MODAL_ACTIONS.HANDLE_PAGE
+  );
   const [selectedPage, setSelectedPage] = useState<Page | null>(null);
   const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
   const { data: usersResult, isLoading: usersAreLoading } = useUsers();

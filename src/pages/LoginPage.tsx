@@ -1,38 +1,77 @@
-import React, { useState, useEffect } from 'react'
-import { useAuth } from '../hooks/useAuth'
-import { useLocation, useNavigate } from 'react-router-dom'
-import { Button, Field, Input, Label } from '@headlessui/react'
-import Logo from '@/components/layout/Logo'
-import { FullPageLoader } from '@/components/layout/FullPageLoader'
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Button, Field, Input, Label } from "@headlessui/react";
+import Logo from "@/components/layout/Logo";
+import { FullPageLoader } from "@/components/layout/FullPageLoader";
+import { login } from "@/services/api";
+import { useUser } from "@/hooks/useMe";
+import { useIsAuthenticated } from "@/hooks/useIsAuthenticated";
 
 const LoginPage: React.FC = () => {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [rememberMe, setRememberMe] = useState(false)
-  const { login, isLoading, error, isAuthenticated, setError } = useAuth()
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const {
+    data: authData,
+    refetch: refetchIsAuthenticated,
+    isLoading: isAuthLoading,
+  } = useIsAuthenticated();
+
+  const {
+    data: userData,
+    refetch: refetchUser,
+    isLoading: isUserLoading,
+  } = useUser();
+
+  const isAuthenticated = authData?.data.isAuthenticated;
+  const user = userData?.data;
 
   useEffect(() => {
-    if (isAuthenticated) {
-      const { from } = (location.state as { from: { pathname: string } }) || {
-        from: { pathname: '/' },
+    const redirect = () => {
+      if (isAuthenticated && user) {
+        if (user.passwordIsTemporary) {
+          navigate({ pathname: "/onboard/choose-password" }, { replace: true });
+        } else {
+          const { from } = (location.state as {
+            from: { pathname: string };
+          }) || {
+            from: { pathname: "/" },
+          };
+          navigate(from, { replace: true });
+        }
       }
-      navigate(from, { replace: true })
-    }
-  }, [isAuthenticated, navigate, location])
-
-  if (isLoading) {
-    return <FullPageLoader />
-  }
+    };
+    redirect();
+  }, [isAuthenticated, user, navigate, location.state]);
 
   const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
     try {
-      await login(email, password, rememberMe)
-    } catch (error) {
-      setError('Erreur de connexion. Veuillez vérifier vos identifiants.')
+      const {
+        data: { isAuthenticated },
+      } = await login(email, password, rememberMe);
+      if (isAuthenticated) {
+        await refetchIsAuthenticated();
+        await refetchUser();
+      }
+    } catch (err) {
+      console.error((err as Error).message);
+      setError("Une erreur s'est produite lors de la connexion.");
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  if (isAuthLoading || isUserLoading) {
+    return <FullPageLoader />;
   }
 
   return (
@@ -67,7 +106,7 @@ const LoginPage: React.FC = () => {
                 className="relative block w-full appearance-none rounded-none rounded-t-md border border-primary-300 px-3 py-2.5 text-primary-900 placeholder-primary-500 focus:z-10 focus:border-secondary-500 focus:outline-none focus:ring-secondary-500 sm:text-sm"
                 placeholder="Adresse e-mail"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={e => setEmail(e.target.value)}
               />
             </Field>
             <Field>
@@ -83,7 +122,7 @@ const LoginPage: React.FC = () => {
                 className="relative block w-full appearance-none rounded-none rounded-b-md border border-primary-300 px-3 py-2.5 text-primary-900 placeholder-primary-500 focus:z-10 focus:border-secondary-500 focus:outline-none focus:ring-secondary-500 sm:text-sm"
                 placeholder="Mot de passe"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
               />
             </Field>
           </div>
@@ -94,7 +133,7 @@ const LoginPage: React.FC = () => {
               type="checkbox"
               className="h-4 w-4 rounded border-primary-300 text-secondary-600 focus:ring-secondary-500"
               checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
+              onChange={e => setRememberMe(e.target.checked)}
             />
             <Label
               htmlFor="remember-me"
@@ -110,13 +149,13 @@ const LoginPage: React.FC = () => {
               className="group relative flex w-full justify-center rounded-md border border-transparent bg-secondary-600 px-4 py-2 text-sm font-medium text-white hover:bg-secondary-700 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2"
               disabled={isLoading}
             >
-              {isLoading ? 'Connexion...' : 'Se connecter'}
+              {isLoading ? "Connexion..." : "Se connecter"}
             </Button>
           </div>
         </form>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default LoginPage
+export default LoginPage;
