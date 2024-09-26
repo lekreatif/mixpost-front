@@ -1,5 +1,4 @@
 import { useQuery, UseQueryOptions } from "@tanstack/react-query";
-import { useAuth } from "./useAuth";
 import { USER_ROLE } from "@/types";
 import { useUser } from "./useMe";
 import { useIsAuthenticated } from "./useIsAuthenticated";
@@ -13,9 +12,7 @@ export function useAuthenticatedQuery<TData>(
 
   return useQuery({
     queryKey: Array.isArray(key) ? key : [key],
-    queryFn: async () => {
-      return fetchFn();
-    },
+    queryFn: async () => fetchFn(),
     ...options,
     enabled:
       (!isAuthLoading &&
@@ -30,24 +27,19 @@ export function useAdminQuery<TData>(
   fetchFn: () => Promise<TData>,
   options?: Omit<UseQueryOptions<TData, Error>, "queryKey" | "queryFn">
 ) {
-  const { data: userData } = useUser();
-  const { data: authData } = useIsAuthenticated();
-  const { refreshToken } = useAuth();
+  const { data: userData, isLoading: isUserLoading } = useUser();
+  const { data: authData, isLoading: isAuthLoading } = useIsAuthenticated();
 
   return useQuery({
     queryKey: Array.isArray(key) ? key : [key],
-    queryFn: async () => {
-      if (!authData || !authData.data.isAuthenticated) {
-        await refreshToken();
-      }
-      return fetchFn();
-    },
+    queryFn: async () => fetchFn(),
     ...options,
     enabled:
-      authData &&
-      authData.data.isAuthenticated &&
-      (options?.enabled ?? true) &&
-      userData &&
-      userData.data.role === USER_ROLE.SUPER_ADMIN,
+      (!isAuthLoading &&
+        authData?.data.isAuthenticated &&
+        (options?.enabled ?? true) &&
+        !isUserLoading &&
+        userData?.data.role === USER_ROLE.SUPER_ADMIN) ??
+      false,
   });
 }

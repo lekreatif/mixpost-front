@@ -12,7 +12,7 @@ import api, {
 import { useMutation } from "@tanstack/react-query";
 import { SocialAccount, IUser } from "@/types";
 import { usePages } from "./usePages";
-import { useAuthenticatedQuery } from "./useAuthenticatedQuery";
+import { useAdminQuery } from "./useAuthenticatedQuery";
 
 export const useAdmin = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -26,7 +26,7 @@ export const useAdmin = () => {
       isRefetching,
       error,
       refetch,
-    } = useAuthenticatedQuery("socialAccounts", getSocialAccounts, true);
+    } = useAdminQuery("socialAccounts", getSocialAccounts);
 
     return {
       socialAccounts: res ? res.data : null,
@@ -62,7 +62,8 @@ export const useAdmin = () => {
     }
   };
 
-  const useUsers = () => useAuthenticatedQuery("getUsers", getUsers, true);
+  const useUsers = () => useAdminQuery("getUsers", getUsers);
+
   const { refetch: refetchUsers } = useUsers();
 
   const addUserMutation = useMutation({
