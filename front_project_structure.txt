@@ -49,6 +49,8 @@ src/components/CreatePost/Preview.tsx
 src/components/CreatePost/ScheduleSection.tsx
 src/components/CreatePost/VideoThumbnailSelector.tsx
 src/components/CreatePost/VisibilitySection.tsx
+src/components/ErrorBoundary.tsx
+src/components/ErrorFallback.tsx
 src/components/Modals
 src/components/Modals/Modal.tsx
 src/components/Modals/Notification.tsx
@@ -92,6 +94,7 @@ src/hooks/useFormValidation.ts
 src/hooks/useIdleTimer.ts
 src/hooks/useIsAuthenticated.ts
 src/hooks/useLocalStoragePost.ts
+src/hooks/useLogout.ts
 src/hooks/useMe.ts
 src/hooks/useMediaSelection.ts
 src/hooks/usePages.ts

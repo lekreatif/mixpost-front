@@ -34,6 +34,8 @@ interface CreatePostContextType {
   setThumbnail: (thumbnail: Blob | null) => void;
   isPublishing: boolean;
   setIsPublishing: (isPublishing: boolean) => void;
+  videoRatio: string;
+  setVideoRatio: (ratio: string) => void;
 }
 
 export const CreatePostContext = createContext<
@@ -74,6 +76,11 @@ export const CreatePostProvider: React.FC<{ children: React.ReactNode }> = ({
     null
   );
 
+  const [videoRatio, setVideoRatio] = useLocalStoragePost<string>(
+    "videoRatio",
+    "original"
+  );
+
   const [isPublishing, setIsPublishing] = useState(false);
   return (
     <CreatePostContext.Provider
@@ -98,6 +105,8 @@ export const CreatePostProvider: React.FC<{ children: React.ReactNode }> = ({
         setThumbnail,
         isPublishing,
         setIsPublishing,
+        videoRatio,
+        setVideoRatio,
       }}
     >
       {children}
