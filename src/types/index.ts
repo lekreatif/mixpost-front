@@ -46,6 +46,13 @@ export enum SocialPlatform {
   FACEBOOK = "facebook",
 }
 
+export enum VideoRatio {
+  ORIGINAL = "original",
+  SQUARE = "1:1",
+  LANDSCAPE = "16:9",
+  PORTRAIT = "9:16",
+}
+
 export interface PostData {
   description: string;
   isPublic: boolean;
@@ -56,6 +63,7 @@ export interface PostData {
   medias: { url: string; type: MediaType }[];
   videoTitle?: string;
   thumbnailUrl?: string;
+  videoRatio: VideoRatio;
 }
 
 export interface Media {

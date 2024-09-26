@@ -38,6 +38,7 @@ export const usePostCreation = () => {
     thumbnail,
     isScheduled,
     scheduledDate,
+    videoRatio,
   } = context;
 
   const createPostMutation = useMutation({
@@ -76,6 +77,7 @@ export const usePostCreation = () => {
         postType,
         videoTitle: mediaType === MediaType.VIDEO ? videoTitle : undefined,
         thumbnailUrl: thumbnailUrl ? thumbnailUrl : undefined,
+        videoRatio,
       };
 
       return publish.mutateAsync(postData);

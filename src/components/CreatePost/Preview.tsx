@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { MediaType, Page } from "@/types";
+import { MediaType, Page, VideoRatio } from "@/types";
 import { SlLike } from "react-icons/sl";
 import { FaRegComment } from "react-icons/fa6";
 import { PiShareFatLight } from "react-icons/pi";
@@ -42,16 +42,19 @@ const RenderMediaPreview = ({
   }
 
   const aspectRatio =
-    videoRatio === "1:1"
+    videoRatio === VideoRatio.SQUARE
       ? 1
-      : videoRatio === "16:9"
+      : videoRatio === VideoRatio.LANDSCAPE
         ? 16 / 9
-        : videoRatio === "9:16"
+        : videoRatio === VideoRatio.PORTRAIT
           ? 9 / 16
-          : 16 / 9;
+          : 16 / 9; // default to 16:9 for original
   const containerStyle = {
     width: "100%",
-    paddingTop: videoRatio === "9:16" ? "400px" : `${(1 / aspectRatio) * 100}%`,
+    paddingTop:
+      videoRatio === VideoRatio.PORTRAIT
+        ? "400px"
+        : `${(1 / aspectRatio) * 100}%`,
     position: "relative" as const,
     margin: "auto",
   };
@@ -61,8 +64,11 @@ const RenderMediaPreview = ({
     top: "50%",
     left: "50%",
     transform: "translate(-50%, -50%)",
-    width: videoRatio === "9:16" ? `${(400 * 9) / 16}px` : "100%",
-    height: videoRatio === "1:1" || videoRatio === "9:16" ? "100%" : "auto",
+    width: videoRatio === VideoRatio.PORTRAIT ? `${(400 * 9) / 16}px` : "100%",
+    height:
+      videoRatio === VideoRatio.SQUARE || videoRatio === VideoRatio.PORTRAIT
+        ? "100%"
+        : "auto",
     objectFit: "cover" as const,
   };
 

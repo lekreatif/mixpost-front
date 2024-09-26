@@ -4,7 +4,7 @@ import { Button, Field, Input, Label } from "@headlessui/react";
 import { useMediaSelection } from "@/hooks/useMediaSelection";
 import VideoThumbnailSelector from "./VideoThumbnailSelector";
 import DraggableImageList from "./DraggableImageList";
-import { MediaType } from "@/types";
+import { MediaType, VideoRatio } from "@/types";
 import { RadioGroup, Radio } from "@headlessui/react";
 
 const MediaSelection: React.FC = () => {
@@ -27,10 +27,10 @@ const MediaSelection: React.FC = () => {
   } = useMediaSelection();
 
   const ratioOptions = [
-    { id: "original", name: "Original" },
-    { id: "1:1", name: "Carré (1:1)" },
-    { id: "16:9", name: "Paysage (16:9)" },
-    { id: "9:16", name: "Vertical (9:16)" },
+    { id: VideoRatio.ORIGINAL, name: "Original" },
+    { id: VideoRatio.SQUARE, name: "Carré (1:1)" },
+    { id: VideoRatio.LANDSCAPE, name: "Paysage (16:9)" },
+    { id: VideoRatio.PORTRAIT, name: "Vertical (9:16)" },
   ];
 
   const fileInputRef = useRef<HTMLInputElement>(null);
