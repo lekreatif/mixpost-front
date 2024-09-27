@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useContext } from "react";
 import { CreatePostContext } from "@/contexts/CreatePostContext";
 import localforage from "localforage";
-import { MediaType, PostType, Media, PostData } from "@/types";
+import { MediaType, PostType, Media } from "@/types";
 import api from "../services/api";
 
 export function determinePostType(medias: Media[]): PostType {
