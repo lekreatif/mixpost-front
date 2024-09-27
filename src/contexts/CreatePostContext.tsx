@@ -1,17 +1,6 @@
 import React, { createContext, useState } from "react";
-import { MediaType, Page } from "@/types";
+import { MediaType, Page, VideoRatio, Media } from "@/types";
 import { useLocalStoragePost } from "@/hooks/useLocalStoragePost";
-
-export interface MediaSize {
-  width: number;
-  height: number;
-}
-
-export interface Media {
-  blob: Blob;
-  fileName: string;
-  size?: MediaSize;
-}
 
 interface CreatePostContextType {
   selectedPages: Page[];
@@ -34,6 +23,8 @@ interface CreatePostContextType {
   setThumbnail: (thumbnail: Blob | null) => void;
   isPublishing: boolean;
   setIsPublishing: (isPublishing: boolean) => void;
+  videoRatio: VideoRatio;
+  setVideoRatio: (ratio: VideoRatio) => void;
 }
 
 export const CreatePostContext = createContext<
@@ -74,6 +65,11 @@ export const CreatePostProvider: React.FC<{ children: React.ReactNode }> = ({
     null
   );
 
+  const [videoRatio, setVideoRatio] = useLocalStoragePost<VideoRatio>(
+    "videoRatio",
+    VideoRatio.ORIGINAL
+  );
+
   const [isPublishing, setIsPublishing] = useState(false);
   return (
     <CreatePostContext.Provider
@@ -98,6 +94,8 @@ export const CreatePostProvider: React.FC<{ children: React.ReactNode }> = ({
         setThumbnail,
         isPublishing,
         setIsPublishing,
+        videoRatio,
+        setVideoRatio,
       }}
     >
       {children}

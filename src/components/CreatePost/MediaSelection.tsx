@@ -1,10 +1,12 @@
-import React, { useRef, useMemo, useCallback } from 'react'
-import { FaImage, FaVideo, FaRegTrashAlt } from 'react-icons/fa'
-import { Button, Field, Input, Label } from '@headlessui/react'
-import { useMediaSelection } from '@/hooks/useMediaSelection'
-import VideoThumbnailSelector from './VideoThumbnailSelector'
-import DraggableImageList from './DraggableImageList'
-import { MediaType } from '@/types'
+import React, { useRef, useMemo, useCallback } from "react";
+import { FaImage, FaVideo, FaRegTrashAlt } from "react-icons/fa";
+import { Button, Field, Input, Label } from "@headlessui/react";
+import { useMediaSelection } from "@/hooks/useMediaSelection";
+import VideoThumbnailSelector from "./VideoThumbnailSelector";
+import DraggableImageList from "./DraggableImageList";
+import { MediaType, VideoRatio } from "@/types";
+import { RadioGroup, Radio } from "@headlessui/react";
+
 const MediaSelection: React.FC = () => {
   const {
     mediaType,
@@ -20,29 +22,38 @@ const MediaSelection: React.FC = () => {
     setSuggestedThumbnails,
     customThumbnail,
     medias,
-  } = useMediaSelection()
+    videoRatio,
+    setVideoRatio,
+  } = useMediaSelection();
 
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const ratioOptions = [
+    { id: VideoRatio.ORIGINAL, name: "Original" },
+    { id: VideoRatio.SQUARE, name: "Carré (1:1)" },
+    { id: VideoRatio.LANDSCAPE, name: "Paysage (16:9)" },
+    { id: VideoRatio.PORTRAIT, name: "Vertical (9:16)" },
+  ];
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleMediaTypeSelection = useCallback(
     (type: MediaType) => {
-      if (type !== mediaType) setMediaType(type)
+      if (type !== mediaType) setMediaType(type);
 
       if (fileInputRef.current) {
         fileInputRef.current.accept =
           type === MediaType.IMAGE
-            ? 'image/jpeg, image/png, image/jpg'
-            : 'video/mp4'
-        fileInputRef.current.multiple = type === MediaType.IMAGE
-        fileInputRef.current.click()
+            ? "image/jpeg, image/png, image/jpg"
+            : "video/mp4";
+        fileInputRef.current.multiple = type === MediaType.IMAGE;
+        fileInputRef.current.click();
       }
     },
     [setMediaType, mediaType]
-  )
+  );
 
   const renderedSelectedFiles = useMemo(() => {
     if (medias.length === 0) {
-      return null
+      return null;
     }
     if (mediaType === MediaType.VIDEO && medias.length > 0) {
       return (
@@ -66,7 +77,7 @@ const MediaSelection: React.FC = () => {
             <FaRegTrashAlt />
           </Button>
         </div>
-      )
+      );
     }
 
     if (mediaType === MediaType.IMAGE) {
@@ -87,17 +98,17 @@ const MediaSelection: React.FC = () => {
             </Button>
           )}
         </>
-      )
+      );
     }
 
-    return null
+    return null;
   }, [
     mediaType,
     handleMediaTypeSelection,
     removeFile,
     suggestedThumbnails,
     medias,
-  ])
+  ]);
 
   return (
     <>
@@ -132,11 +143,11 @@ const MediaSelection: React.FC = () => {
         <Input
           ref={fileInputRef}
           type="file"
-          accept={mediaType === MediaType.IMAGE ? 'image/*' : 'video/*'}
+          accept={mediaType === MediaType.IMAGE ? "image/*" : "video/*"}
           multiple={mediaType === MediaType.IMAGE}
-          onChange={(e) => {
-            handleFileSelection(e.target.files)
-            e.target.value = ''
+          onChange={e => {
+            handleFileSelection(e.target.files);
+            e.target.value = "";
           }}
           className="hidden"
         />
@@ -155,9 +166,48 @@ const MediaSelection: React.FC = () => {
               id="videoTitle"
               value={videoTitle}
               placeholder={videoTitle}
-              onChange={(e) => setVideoTitle(e.target.value)}
+              onChange={e => setVideoTitle(e.target.value)}
               className="mt-1 block h-10 w-full rounded-md border border-primary-300 bg-primary-50 px-4 text-sm font-light text-primary-700 data-[focus]:border-secondary-300 data-[focus]:outline-none sm:text-sm"
             />
+          </Field>
+          <Field>
+            <RadioGroup
+              value={videoRatio}
+              onChange={setVideoRatio}
+              className="mt-4"
+            >
+              <Label className="block text-sm font-medium text-primary-700">
+                Ratio de la vidéo
+              </Label>
+              <div className="mt-2 flex space-x-3">
+                {ratioOptions.map(option => (
+                  <Radio
+                    key={option.id}
+                    value={option.id}
+                    className={({ checked }) =>
+                      `
+          ${checked ? "bg-secondary-500 text-primary-50" : "border bg-primary-50"}
+          relative flex cursor-pointer rounded-lg px-3 py-2 focus:outline-none data-[hover]:ring-secondary-300 data-[hover]:ring-1 text-sm font-light`
+                    }
+                  >
+                    {({ checked }) => (
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center">
+                          <div className="text-sm">
+                            <Label
+                              as="p"
+                              className={`font-light text-xs ${checked ? "text-primary-50" : "text-primary-700"}`}
+                            >
+                              {option.name}
+                            </Label>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </Radio>
+                ))}
+              </div>
+            </RadioGroup>
           </Field>
         </div>
       )}
@@ -175,7 +225,7 @@ const MediaSelection: React.FC = () => {
         </div>
       )}
     </>
-  )
-}
+  );
+};
 
-export default MediaSelection
+export default MediaSelection;

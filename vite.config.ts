@@ -6,6 +6,9 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   return {
     plugins: [react()],
+    optimizeDeps: {
+      exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
+    },
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
@@ -46,6 +49,10 @@ export default defineConfig(({ mode }) => {
             });
           },
         },
+      },
+      headers: {
+        "Cross-Origin-Embedder-Policy": "require-corp",
+        "Cross-Origin-Opener-Policy": "same-origin",
       },
     },
   };

@@ -32,6 +32,7 @@ const ActionButtons: React.FC = () => {
     validatePost,
     isPublishing,
     setIsPublishing,
+    // transcodingProgress,
   } = usePostCreation();
 
   const openDialog = (config: Omit<DialogConfig, "isOpen">) => {
@@ -39,13 +40,14 @@ const ActionButtons: React.FC = () => {
   };
 
   const closeDialog = () => {
-    setDialogConfig((prev) => ({ ...prev, isOpen: false }));
+    setDialogConfig(prev => ({ ...prev, isOpen: false }));
   };
 
   const handleCancel = () => {
     openDialog({
       title: "Confirmer l'annulation",
-      message: "Êtes-vous sûr de vouloir annuler ? Toutes les modifications non enregistrées seront perdues.",
+      message:
+        "Êtes-vous sûr de vouloir annuler ? Toutes les modifications non enregistrées seront perdues.",
       confirmLabel: "Confirmer",
       cancelLabel: "Annuler",
       onConfirm: handleConfirmCancel,
@@ -94,7 +96,8 @@ const ActionButtons: React.FC = () => {
         console.log(err.message);
         openDialog({
           title: "Erreur de publication",
-          message: err.message || "Une erreur est survenue lors de la publication.",
+          message:
+            err.message || "Une erreur est survenue lors de la publication.",
           confirmLabel: "Fermer",
           onConfirm: closeDialog,
         });
@@ -130,7 +133,11 @@ const ActionButtons: React.FC = () => {
           onClick={handlePublish}
           className="rounded-md border bg-secondary-600 px-4 py-2 text-primary-50 transition-all duration-300 ease-in-out hover:border-secondary-500 hover:bg-transparent hover:text-secondary-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isPublishing ? "En cours..." : isScheduled ? "Programmer" : "Publier"}
+          {isPublishing
+            ? "En cours..."
+            : isScheduled
+              ? "Programmer"
+              : "Publier"}
         </Button>
       </div>
 
@@ -149,9 +156,7 @@ const ActionButtons: React.FC = () => {
               {dialogConfig.title}
             </DialogTitle>
             <div className="mt-2">
-              <p className="text-sm text-gray-500">
-                {dialogConfig.message}
-              </p>
+              <p className="text-sm text-gray-500">{dialogConfig.message}</p>
             </div>
             <div className="mt-4 flex justify-end space-x-2">
               {dialogConfig.cancelLabel && (
