@@ -1,14 +1,12 @@
 import { useCallback } from "react";
-import { useUpload } from "./useUpload";
-import { usePostApi } from "./usePostApi";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { PostData } from "@/types";
 import { useContext } from "react";
 import { CreatePostContext } from "@/contexts/CreatePostContext";
 import localforage from "localforage";
-import { MediaType, PostType } from "@/types";
+import { MediaType, PostType, Media, PostData } from "@/types";
+import api from "../services/api";
 
-export function determinePostType(medias: { type: MediaType }[]): PostType {
+export function determinePostType(medias: Media[]): PostType {
   if (medias.length === 0) {
     return PostType.TEXT;
   }
@@ -22,8 +20,6 @@ export function determinePostType(medias: { type: MediaType }[]): PostType {
 
 export const usePostCreation = () => {
   const context = useContext(CreatePostContext);
-  const { uplaodVideo, uploadMultipleImages, uploadImage } = useUpload();
-  const { publish } = usePostApi();
   const queryClient = useQueryClient();
 
   if (!context)
@@ -43,50 +39,45 @@ export const usePostCreation = () => {
 
   const createPostMutation = useMutation({
     mutationFn: async () => {
-      let mediaUrls: { url: string; type: MediaType }[] = [];
-      let thumbnailUrl = null;
+      const formData = new FormData();
 
-      if (mediaType === MediaType.VIDEO) {
-        const [mediaRes, thumbnailRes] = await Promise.all([
-          uplaodVideo.mutateAsync(medias[0].blob),
-          thumbnail ? uploadImage.mutateAsync(thumbnail) : null,
-        ]);
-        mediaUrls = mediaRes.data.medias.map(m => ({
-          ...m,
-          type: MediaType.VIDEO,
-        }));
-        thumbnailUrl = thumbnailRes?.data.medias[0].url;
-      } else if (mediaType === MediaType.IMAGE) {
-        const mediaRes = await uploadMultipleImages.mutateAsync(
-          medias.map(media => media.blob)
-        );
-        mediaUrls = mediaRes.data.medias.map(m => ({
-          ...m,
-          type: MediaType.IMAGE,
-        }));
+      formData.append("description", content);
+      formData.append("isPublic", isPublic.toString());
+      formData.append("postType", determinePostType(medias));
+      if (mediaType) {
+        formData.append("mediaType", mediaType);
+      }
+      formData.append("videoRatio", videoRatio);
+      selectedPages.forEach(page => {
+        formData.append("pagesIds[]", page.pageId);
+      });
+
+      if (isScheduled && scheduledDate) {
+        formData.append("scheduledFor", scheduledDate.getTime().toString());
       }
 
-      const postType = determinePostType(mediaUrls);
+      if (mediaType === MediaType.VIDEO && medias.length > 0) {
+        formData.append("video", medias[0].blob);
+        if (videoTitle) {
+          formData.append("videoTitle", videoTitle);
+        }
+        if (thumbnail) {
+          formData.append("thumbnail", thumbnail);
+        }
+      } else if (mediaType === MediaType.IMAGE) {
+        medias.forEach(media => formData.append(`images`, media.blob));
+      }
 
-      const postData: PostData = {
-        description: content,
-        medias: mediaUrls,
-        pagesIds: selectedPages.map(p => p.pageId),
-        isPublic,
-        mediaType,
-        postType,
-        videoTitle: mediaType === MediaType.VIDEO ? videoTitle : undefined,
-        thumbnailUrl: thumbnailUrl ? thumbnailUrl : undefined,
-        videoRatio,
-      };
-
-      return publish.mutateAsync(postData);
+      return api.post("/post/publish", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
   });
-
   const validatePost = useCallback((): string[] => {
     const errors: string[] = [];
 

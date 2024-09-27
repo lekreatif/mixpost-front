@@ -1,17 +1,6 @@
 import React, { createContext, useState } from "react";
-import { MediaType, Page, VideoRatio } from "@/types";
+import { MediaType, Page, VideoRatio, Media } from "@/types";
 import { useLocalStoragePost } from "@/hooks/useLocalStoragePost";
-
-export interface MediaSize {
-  width: number;
-  height: number;
-}
-
-export interface Media {
-  blob: Blob;
-  fileName: string;
-  size?: MediaSize;
-}
 
 interface CreatePostContextType {
   selectedPages: Page[];

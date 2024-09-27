@@ -60,7 +60,7 @@ export interface PostData {
   postType: PostType;
   scheduledFor?: number;
   pagesIds: string[];
-  medias: { url: string; type: MediaType }[];
+  medias?: { url: string; type: MediaType }[];
   videoTitle?: string;
   thumbnailUrl?: string;
   videoRatio: VideoRatio;
@@ -69,6 +69,12 @@ export interface PostData {
 export interface Media {
   blob: Blob;
   fileName: string;
+  type: MediaType;
+  size?: MediaSize;
+}
+export interface MediaSize {
+  width: number;
+  height: number;
 }
 
 export enum PostStatus {

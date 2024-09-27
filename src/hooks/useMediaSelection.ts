@@ -53,9 +53,13 @@ export const useMediaSelection = () => {
       readFilesAsBlobs(newFiles).then(
         (blobs: { blob: Blob; fileName: string }[]) => {
           if (mediaType === MediaType.VIDEO) {
-            setMedias([blobs[0]]);
+            setMedias([{ ...blobs[0], type: MediaType.VIDEO }]);
             setVideoTitle(newFiles[0].name.split(".").slice(0, -1).join("."));
-          } else setMedias(prev => [...prev, ...blobs]);
+          } else
+            setMedias(prev => [
+              ...prev,
+              ...blobs.map(blob => ({ ...blob, type: MediaType.IMAGE })),
+            ]);
         }
       );
     },
