@@ -4,7 +4,6 @@ import { Button, Field, Input, Label } from "@headlessui/react";
 import Logo from "@/components/layout/Logo";
 import { FullPageLoader } from "@/components/layout/FullPageLoader";
 import { login } from "@/services/api";
-import { useUser } from "@/hooks/useMe";
 import { useIsAuthenticated } from "@/hooks/useIsAuthenticated";
 
 const LoginPage: React.FC = () => {
@@ -20,34 +19,23 @@ const LoginPage: React.FC = () => {
     data: authData,
     refetch: refetchIsAuthenticated,
     isLoading: isAuthLoading,
-  } = useIsAuthenticated();
-
-  const {
-    data: userData,
-    refetch: refetchUser,
-    isLoading: isUserLoading,
-  } = useUser();
+  } = useIsAuthenticated(!location.state?.from);
 
   const isAuthenticated = authData?.data.isAuthenticated;
-  const user = userData?.data;
 
   useEffect(() => {
     const redirect = () => {
-      if (isAuthenticated && user) {
-        if (user.passwordIsTemporary) {
-          navigate({ pathname: "/onboard/choose-password" }, { replace: true });
-        } else {
-          const { from } = (location.state as {
-            from: { pathname: string };
-          }) || {
-            from: { pathname: "/" },
-          };
-          navigate(from, { replace: true });
-        }
+      if (isAuthenticated) {
+        const { from } = (location.state as {
+          from: { pathname: string };
+        }) || {
+          from: { pathname: "/" },
+        };
+        navigate(from, { replace: true });
       }
     };
     redirect();
-  }, [isAuthenticated, user, navigate, location.state]);
+  }, [isAuthenticated, navigate, location.state]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +48,6 @@ const LoginPage: React.FC = () => {
       } = await login(email, password, rememberMe);
       if (isAuthenticated) {
         await refetchIsAuthenticated();
-        await refetchUser();
       }
     } catch (err) {
       console.error((err as Error).message);
@@ -70,7 +57,7 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  if (isAuthLoading || isUserLoading) {
+  if (isAuthLoading) {
     return <FullPageLoader />;
   }
 

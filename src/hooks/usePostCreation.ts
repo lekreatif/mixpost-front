@@ -3,20 +3,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useContext } from "react";
 import { CreatePostContext } from "@/contexts/CreatePostContext";
 import localforage from "localforage";
-import { MediaType, PostType, Media } from "@/types";
+import { MediaType, PostType } from "@/types";
 import api from "../services/api";
-
-export function determinePostType(medias: Media[]): PostType {
-  if (medias.length === 0) {
-    return PostType.TEXT;
-  }
-
-  if (medias.length === 1) {
-    return medias[0].type === MediaType.VIDEO ? PostType.VIDEO : PostType.IMAGE;
-  }
-
-  return PostType.IMAGE; // Si plusieurs médias, c'est forcément un post de type IMAGE
-}
 
 export const usePostCreation = () => {
   const context = useContext(CreatePostContext);
@@ -35,6 +23,8 @@ export const usePostCreation = () => {
     isScheduled,
     scheduledDate,
     videoRatio,
+    postType,
+    videoDuration,
   } = context;
 
   const createPostMutation = useMutation({
@@ -43,7 +33,7 @@ export const usePostCreation = () => {
 
       formData.append("description", content);
       formData.append("isPublic", isPublic.toString());
-      formData.append("postType", determinePostType(medias));
+      formData.append("postType", postType);
       if (mediaType) {
         formData.append("mediaType", mediaType);
       }
@@ -78,36 +68,79 @@ export const usePostCreation = () => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
   });
+
+  const validateContent = useCallback(
+    () =>
+      !content && medias.length === 0
+        ? "Vous devez ajouter du texte ou au moins un média."
+        : null,
+    [content, medias.length]
+  );
+
+  const validateVideoTitle = useCallback(
+    () =>
+      mediaType === MediaType.VIDEO && !videoTitle
+        ? "Un titre est requis pour la vidéo."
+        : null,
+    [mediaType, videoTitle]
+  );
+
+  const validateVideoDuration = useCallback(
+    () =>
+      mediaType === MediaType.VIDEO &&
+      (!videoDuration ||
+        (postType === PostType.REEL &&
+          (videoDuration < 3 || videoDuration > 90)) ||
+        (postType === PostType.STORY &&
+          (videoDuration < 3 || videoDuration > 60)))
+        ? "La vidéo doit être d'au moins 3 secondes et ne dois pas dépasser 90s pour les réels et 60s pour les story."
+        : null,
+    [mediaType, videoDuration, postType]
+  );
+
+  const validateSchedule = useCallback(
+    () =>
+      isScheduled && !scheduledDate
+        ? "Veuillez sélectionner une date de programmation."
+        : null,
+    [isScheduled, scheduledDate]
+  );
+
+  const validatePageSelection = useCallback(
+    () =>
+      selectedPages.length === 0
+        ? "Veuillez sélectionner au moins une page pour publier."
+        : null,
+    [selectedPages.length]
+  );
+
   const validatePost = useCallback((): string[] => {
-    const errors: string[] = [];
+    const validationFunctions = [
+      validateContent,
+      validateVideoTitle,
+      validateVideoDuration,
+      validateSchedule,
+      validatePageSelection,
+    ];
 
-    if (!content && medias.length === 0) {
-      errors.push("Vous devez ajouter du texte ou au moins un média.");
-    }
-
-    if (mediaType === MediaType.VIDEO) {
-      if (!videoTitle) {
-        errors.push("Un titre est requis pour la vidéo.");
-      }
-    }
-
-    if (isScheduled && !scheduledDate) {
-      errors.push("Veuillez sélectionner une date de programmation.");
-    }
-
-    if (selectedPages.length === 0) {
-      errors.push("Veuillez sélectionner au moins une page pour publier.");
-    }
-
-    return errors;
+    return validationFunctions
+      .map(fn => fn())
+      .filter(
+        (
+          error
+        ): error is
+          | "Vous devez ajouter du texte ou au moins un média."
+          | "Veuillez sélectionner au moins une page pour publier."
+          | "Un titre est requis pour la vidéo."
+          | "La vidéo doit être d'au moins 3 secondes et ne dois pas dépasser 90s pour les réels et 60s pour les story."
+          | "Veuillez sélectionner une date de programmation." => error !== null
+      );
   }, [
-    videoTitle,
-    content,
-    isScheduled,
-    mediaType,
-    medias.length,
-    scheduledDate,
-    selectedPages.length,
+    validateContent,
+    validateVideoTitle,
+    validateVideoDuration,
+    validateSchedule,
+    validatePageSelection,
   ]);
 
   const clearStoredData = async () => {

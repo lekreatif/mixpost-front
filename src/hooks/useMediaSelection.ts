@@ -14,6 +14,7 @@ export const useMediaSelection = () => {
     setThumbnail,
     videoRatio,
     setVideoRatio,
+    postType,
   } = usePostCreation();
 
   const [customThumbnail, setCustomThumbnail] = useState<Blob | null>(null);
@@ -115,5 +116,6 @@ export const useMediaSelection = () => {
     medias,
     videoRatio,
     setVideoRatio,
+    postType,
   };
 };

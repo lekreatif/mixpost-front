@@ -97,8 +97,9 @@ export default function Sidebar({
         </Dialog>
       </Transition>
 
-      {/* Static sidebar for desktop */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-40 lg:flex-col">
+      <div
+        className={`hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-40 lg:flex-col`}
+      >
         <SidebarContent
           isSuperAdmin={isSuperAdmin}
           handleLogout={handleLogout}
@@ -116,7 +117,9 @@ function SidebarContent({
   handleLogout: (event: MouseEvent<HTMLButtonElement>) => void;
 }) {
   return (
-    <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-primary-50 px-6 pb-4 border-r shadow-sm">
+    <div
+      className={`flex grow flex-col gap-y-5 overflow-y-auto bg-primary-50 px-6 pb-4 border-r shadow-sm`}
+    >
       <div className="flex h-12 shrink-0 items-center">
         <NavLink
           className="flex w-full items-center gap-1 border-b py-2 text-center font-sans text-lg font-bold"

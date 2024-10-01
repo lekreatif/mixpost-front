@@ -21,48 +21,47 @@ function App() {
         <ErrorFallback error={new Error("An unexpected error occurred")} />
       }
     >
-      <AuthProvider>
-        <NotificationProvider>
-          <Router>
-            <div className="min-h-screen bg-primary-50">
-              <Routes>
-                <Route path="/login" element={<LoginPage />} />
-                <Route
-                  path="/onboard/choose-password"
-                  element={
-                    <PrivateRoute>
-                      <ChoosePasssword />
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/"
-                  element={
+      <NotificationProvider>
+        <Router>
+          <div className="min-h-screen bg-primary-50">
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route
+                path="/onboard/choose-password"
+                element={
+                  <PrivateRoute>
+                    <ChoosePasssword />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/"
+                element={
+                  <AuthProvider>
                     <PrivateRoute>
                       <IsTemporaryPassword>
                         <Layout />
                       </IsTemporaryPassword>
                     </PrivateRoute>
+                  </AuthProvider>
+                }
+              >
+                <Route path="/" element={<DashboardPage />} />
+                <Route path="/creer" element={<CreatePostPage />} />
+                <Route
+                  path="/settings"
+                  element={
+                    <IsSuperAdminRoute>
+                      <SettingsPage />
+                    </IsSuperAdminRoute>
                   }
-                >
-                  <Route path="/" element={<DashboardPage />} />
-                  <Route path="/creer" element={<CreatePostPage />} />
-
-                  <Route
-                    path="/settings"
-                    element={
-                      <IsSuperAdminRoute>
-                        <SettingsPage />
-                      </IsSuperAdminRoute>
-                    }
-                  />
-                </Route>
-              </Routes>
-              <Notifications />
-            </div>
-          </Router>
-        </NotificationProvider>
-      </AuthProvider>
+                />
+              </Route>
+            </Routes>
+            <Notifications />
+          </div>
+        </Router>
+      </NotificationProvider>
     </ErrorBoundary>
   );
 }

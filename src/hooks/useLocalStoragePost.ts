@@ -3,7 +3,7 @@ import localforage from "localforage";
 import { useUser } from "./useMe";
 
 export function useLocalStoragePost<T>(key: string, initialValue: T) {
-  const { data: userData } = useUser();
+  const { data: userData, isLoading } = useUser();
   const user = userData ? userData.data : null;
   const userId = user?.id || "anonymous";
   const fullKey = `user_${userId}_${key}`;
@@ -37,6 +37,8 @@ export function useLocalStoragePost<T>(key: string, initialValue: T) {
     },
     [fullKey, storedValue]
   );
+
+  if (!isLoading && !user) throw new Error("User not authenticated");
 
   return [storedValue, setValue] as const;
 }
