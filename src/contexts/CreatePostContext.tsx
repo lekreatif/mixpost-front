@@ -1,5 +1,5 @@
 import React, { createContext, useState } from "react";
-import { MediaType, Page, VideoRatio, Media } from "@/types";
+import { MediaType, Page, VideoRatio, Media, PostType } from "@/types";
 import { useLocalStoragePost } from "@/hooks/useLocalStoragePost";
 
 interface CreatePostContextType {
@@ -25,6 +25,12 @@ interface CreatePostContextType {
   setIsPublishing: (isPublishing: boolean) => void;
   videoRatio: VideoRatio;
   setVideoRatio: (ratio: VideoRatio) => void;
+  postType: PostType;
+  setPostType: (
+    value: PostType | ((val: PostType) => PostType)
+  ) => Promise<void>;
+  videoDuration: number | null;
+  setVideoDuration: (duration: number | null) => void;
 }
 
 export const CreatePostContext = createContext<
@@ -70,6 +76,16 @@ export const CreatePostProvider: React.FC<{ children: React.ReactNode }> = ({
     VideoRatio.ORIGINAL
   );
 
+  const [postType, setPostType] = useLocalStoragePost<PostType>(
+    "postType",
+    PostType.TEXT
+  );
+
+  const [videoDuration, setVideoDuration] = useLocalStoragePost<number | null>(
+    "videoDuration",
+    null
+  );
+
   const [isPublishing, setIsPublishing] = useState(false);
   return (
     <CreatePostContext.Provider
@@ -96,6 +112,10 @@ export const CreatePostProvider: React.FC<{ children: React.ReactNode }> = ({
         setIsPublishing,
         videoRatio,
         setVideoRatio,
+        postType,
+        setPostType,
+        videoDuration,
+        setVideoDuration,
       }}
     >
       {children}

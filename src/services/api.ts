@@ -1,85 +1,72 @@
-import axios, { AxiosResponse, AxiosError, CancelTokenSource } from "axios";
+import axios, { AxiosError, AxiosResponse } from "axios";
 import { IUser, SocialAccount, Page } from "@/types";
+import { authService } from "./authService";
+import  NavigationService  from "./NavigationService";
 
 const API_URL = "/api";
+
+let isRefreshing = false;
+let refreshSubscribers: Array<(error: any) => void> = [];
+
+const onRefreshed = () => {
+  refreshSubscribers.forEach(callback => callback(null));
+  refreshSubscribers = [];
+};
+
+const addRefreshSubscriber = (callback: (error: any) => void): void => {
+  refreshSubscribers.push(callback);
+};
+
+const isLoginPage = (): boolean => {
+  return window.location.pathname === "/login";
+};
 
 export const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,
 });
 
-let refreshPromise: Promise<void> | null = null;
-let isRefreshing = false;
-let failedQueue: Array<{
-  resolve: (value?: unknown) => void;
-  reject: (reason?: any) => void;
-}> = [];
-let cancelTokenSource: CancelTokenSource | null = null;
-
-const processQueue = (error: Error | null) => {
-  failedQueue.forEach(prom => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve();
-    }
-  });
-  failedQueue = [];
-};
-
 api.interceptors.response.use(
   response => response,
-  async (error: AxiosError) => {
-    const originalRequest = error.config as any;
-    if (error.response?.status === 401) {
-      if (originalRequest.url === "/auth/refresh") {
+  async (error: any) => {
+    const { config, response } = error;
+
+    if (response && response.status === 401 && !config._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          addRefreshSubscriber((err: any) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve(api(config));
+            }
+          });
+        });
+      }
+
+      config._retry = true;
+      isRefreshing = true;
+
+      try {
+        await authService.refreshToken();
+        onRefreshed();
+        return api(config);
+      } catch (refreshError) {
         isRefreshing = false;
-        const error = new Error("Vous devez vous connecter");
-        processQueue(error);
-        throw error;
-      }
+        refreshSubscribers.forEach(callback => callback(refreshError));
+        refreshSubscribers = [];
 
-      if (!originalRequest._retry) {
-        if (isRefreshing) {
-          return new Promise((resolve, reject) => {
-            failedQueue.push({ resolve, reject });
-          })
-            .then(() => {
-              return api(originalRequest);
-            })
-            .catch(err => {
-              return Promise.reject(err);
-            });
+        if (
+          (refreshError as AxiosError).response &&
+          (refreshError as AxiosError).response?.status === 403
+        ) {
+          if (!isLoginPage()) {
+            NavigationService.navigate("/login");
+          }
         }
-
-        originalRequest._retry = true;
-        isRefreshing = true;
-
-        try {
-          await refreshAccessToken();
-          processQueue(null);
-          return api(originalRequest);
-        } finally {
-          isRefreshing = false;
-        }
+        return Promise.reject(error);
       }
     }
-    throw error;
-  }
-);
-
-api.interceptors.request.use(
-  config => {
-    if (isRefreshing) {
-      if (cancelTokenSource) {
-        cancelTokenSource.cancel("Request canceled due to token refreshing.");
-      }
-      cancelTokenSource = axios.CancelToken.source();
-      config.cancelToken = cancelTokenSource.token;
-    }
-    return config;
-  },
-  error => {
     return Promise.reject(error);
   }
 );
@@ -87,18 +74,6 @@ api.interceptors.request.use(
 export const refreshAccessToken = async (): Promise<void> => {
   await api.post("/auth/refresh");
 };
-
-export const setIsRefreshing = (value: boolean) => {
-  isRefreshing = value;
-};
-
-export const getIsRefreshing = () => isRefreshing;
-
-export const setRefreshPromise = (promise: Promise<void> | null) => {
-  refreshPromise = promise;
-};
-
-export const getRefreshPromise = () => refreshPromise;
 
 export const login = async (
   email: string,

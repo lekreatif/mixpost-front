@@ -1,15 +1,17 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { useLogout } from "./useLogout";
-import { resetInactivityTimer } from "@/services/api";
 
-const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes en millisecondes
-
+const INACTIVITY_TIMEOUT = 15 * 60 * 1000;
 export const useIdleTimer = () => {
   const { mutate: logout } = useLogout();
+  const inactivityTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const resetTimer = useCallback(() => {
-    resetInactivityTimer();
-  }, []);
+    if (inactivityTimeout.current) {
+      clearTimeout(inactivityTimeout.current);
+    }
+    inactivityTimeout.current = setTimeout(logout, INACTIVITY_TIMEOUT);
+  }, [logout]);
 
   useEffect(() => {
     const activityEvents = [
@@ -17,28 +19,19 @@ export const useIdleTimer = () => {
       "keydown",
       "touchstart",
       "mousemove",
-      "user_activity", // Événement personnalisé pour les requêtes API
+      "user_activity",
     ];
+    activityEvents.forEach(event => window.addEventListener(event, resetTimer));
 
-    const handleActivity = () => {
-      resetTimer();
-    };
-
-    activityEvents.forEach(event => {
-      window.addEventListener(event, handleActivity);
-    });
-
-    const inactivityTimeout = setTimeout(() => {
-      logout();
-    }, INACTIVITY_TIMEOUT);
+    resetTimer(); // Initial setup
 
     return () => {
-      activityEvents.forEach(event => {
-        window.removeEventListener(event, handleActivity);
-      });
-      clearTimeout(inactivityTimeout);
+      activityEvents.forEach(event =>
+        window.removeEventListener(event, resetTimer)
+      );
+      if (inactivityTimeout.current) clearTimeout(inactivityTimeout.current);
     };
-  }, [logout, resetTimer]);
+  }, [resetTimer]);
 
   return resetTimer;
 };
