@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { IUser, SocialAccount, Page } from "@/types";
 import { authService } from "./authService";
-import  NavigationService  from "./NavigationService";
+import NavigationService from "./NavigationService";
 
 const API_URL = "/api";
 
@@ -90,7 +90,7 @@ export const choosePassword = ({
 }: {
   userId: number;
   password: string;
-}) => api.put(`/users/${userId}/choose-password`, { password });
+}) => api.put(`/user/${userId}/choose-password`, { password });
 
 export const getAuthState = (): Promise<
   AxiosResponse<{ isAuthenticated: boolean }>
@@ -98,7 +98,7 @@ export const getAuthState = (): Promise<
 export const getMyPages = (): Promise<AxiosResponse<Page[]>> =>
   api.get("/pages/my-pages");
 export const getUser: () => Promise<AxiosResponse<IUser>> = async () =>
-  api.get("/users/me");
+  api.get("/user/me");
 export const getFacebookAuthUrl = async (): Promise<string> => {
   const response = await api.get("/auth/facebook/url");
   return response.data.url;
@@ -107,7 +107,7 @@ export const getSocialAccounts = async (): Promise<
   AxiosResponse<SocialAccount[]>
 > => api.get("/social-accounts");
 
-export const getUsers = async () => api.get("/users");
+export const getUsers = async () => api.get("/user");
 
 export const addFacebookPage = async (pageId: string) => {
   await api.post("/facebook/pages", { pageId });
@@ -124,12 +124,11 @@ export const updateSocialAccount = async (
   );
   return response.data as SocialAccount;
 };
-export const createUser = async (data: IUser) =>
-  api.post("/users", { ...data });
+export const createUser = async (data: IUser) => api.post("/user", { ...data });
 export const updateUser = async (data: IUser) =>
-  api.put(`/users/${data.email}`, data);
+  api.put(`/user/${data.email}`, data);
 export const deleteUser = async (userId: number) =>
-  api.delete(`/users/${userId}`);
+  api.delete(`/user/${userId}`);
 
 export const assignUsersToPage = async (pageId: string, userIds: number[]) =>
   api.post(`/pages/assign-users`, { pageId, userIds });

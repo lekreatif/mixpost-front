@@ -67,7 +67,7 @@ src/components/Settings/SocialAccountForm.tsx
 src/components/Settings/SocialAccountsList.tsx
 src/components/Settings/User
 src/components/Settings/User/UserForm.tsx
-src/components/Settings/User/UsersList.tsx
+src/components/Settings/User/userList.tsx
 src/components/calendar
 src/components/calendar/CalendarHeader.tsx
 src/components/calendar/DayView.tsx
