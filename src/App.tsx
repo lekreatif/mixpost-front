@@ -9,26 +9,45 @@ import IsSuperAdminRoute from "@/components/Auth/IsSuperAdminRoute";
 import { AuthProvider } from "./contexts/AuthContext";
 import Layout from "@/components/layout/Layout";
 import CreatePostPage from "@/pages/CreatePost";
+import ChoosePasssword from "@/pages/ChoosePassword";
+import IsTemporaryPassword from "@/components/Auth/IsTemporaryPassword";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import ErrorFallback from "@/components/ErrorFallback";
 
 function App() {
   return (
-    <AuthProvider>
+    <ErrorBoundary
+      fallback={
+        <ErrorFallback error={new Error("An unexpected error occurred")} />
+      }
+    >
       <NotificationProvider>
         <Router>
           <div className="min-h-screen bg-primary-50">
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route
-                path="/"
+                path="/onboard/choose-password"
                 element={
                   <PrivateRoute>
-                    <Layout />
+                    <ChoosePasssword />
                   </PrivateRoute>
+                }
+              />
+              <Route
+                path="/"
+                element={
+                  <AuthProvider>
+                    <PrivateRoute>
+                      <IsTemporaryPassword>
+                        <Layout />
+                      </IsTemporaryPassword>
+                    </PrivateRoute>
+                  </AuthProvider>
                 }
               >
                 <Route path="/" element={<DashboardPage />} />
                 <Route path="/creer" element={<CreatePostPage />} />
-
                 <Route
                   path="/settings"
                   element={
@@ -43,7 +62,7 @@ function App() {
           </div>
         </Router>
       </NotificationProvider>
-    </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

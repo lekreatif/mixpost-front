@@ -1,87 +1,72 @@
-import axios, { AxiosResponse, AxiosError, CancelTokenSource } from "axios";
+import axios, { AxiosError, AxiosResponse } from "axios";
 import { IUser, SocialAccount, Page } from "@/types";
+import { authService } from "./authService";
+import NavigationService from "./NavigationService";
 
-const { VITE_NODE_ENV, VITE_API_URL } = import.meta.env;
+const API_URL = "/api";
 
-const API_URL = VITE_NODE_ENV === "development" ? "/api" : VITE_API_URL;
+let isRefreshing = false;
+let refreshSubscribers: Array<(error: any) => void> = [];
+
+const onRefreshed = () => {
+  refreshSubscribers.forEach(callback => callback(null));
+  refreshSubscribers = [];
+};
+
+const addRefreshSubscriber = (callback: (error: any) => void): void => {
+  refreshSubscribers.push(callback);
+};
+
+const isLoginPage = (): boolean => {
+  return window.location.pathname === "/login";
+};
 
 export const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,
 });
 
-let refreshPromise: Promise<void> | null = null;
-let isRefreshing = false;
-let failedQueue: Array<{
-  resolve: (value?: unknown) => void;
-  reject: (reason?: any) => void;
-}> = [];
-let cancelTokenSource: CancelTokenSource | null = null;
-
-const processQueue = (error: Error | null) => {
-  failedQueue.forEach(prom => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve();
-    }
-  });
-  failedQueue = [];
-};
-
 api.interceptors.response.use(
   response => response,
-  async (error: AxiosError) => {
-    const originalRequest = error.config as any;
-    if (error.response?.status === 401) {
-      if (originalRequest.url === "/auth/refresh") {
+  async (error: any) => {
+    const { config, response } = error;
+
+    if (response && response.status === 401 && !config._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          addRefreshSubscriber((err: any) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve(api(config));
+            }
+          });
+        });
+      }
+
+      config._retry = true;
+      isRefreshing = true;
+
+      try {
+        await authService.refreshToken();
+        onRefreshed();
+        return api(config);
+      } catch (refreshError) {
         isRefreshing = false;
-        const error = new Error("Vous devez vous connecter");
-        processQueue(error);
-        throw error;
-      }
+        refreshSubscribers.forEach(callback => callback(refreshError));
+        refreshSubscribers = [];
 
-      if (!originalRequest._retry) {
-        if (isRefreshing) {
-          return new Promise((resolve, reject) => {
-            failedQueue.push({ resolve, reject });
-          })
-            .then(() => {
-              return api(originalRequest);
-            })
-            .catch(err => {
-              return Promise.reject(err);
-            });
+        if (
+          (refreshError as AxiosError).response &&
+          (refreshError as AxiosError).response?.status === 403
+        ) {
+          if (!isLoginPage()) {
+            NavigationService.navigate("/login");
+          }
         }
-
-        originalRequest._retry = true;
-        isRefreshing = true;
-
-        try {
-          await refreshAccessToken();
-          processQueue(null);
-          return api(originalRequest);
-        } finally {
-          isRefreshing = false;
-        }
+        return Promise.reject(error);
       }
     }
-    throw error;
-  }
-);
-
-api.interceptors.request.use(
-  config => {
-    if (isRefreshing) {
-      if (cancelTokenSource) {
-        cancelTokenSource.cancel("Request canceled due to token refreshing.");
-      }
-      cancelTokenSource = axios.CancelToken.source();
-      config.cancelToken = cancelTokenSource.token;
-    }
-    return config;
-  },
-  error => {
     return Promise.reject(error);
   }
 );
@@ -90,31 +75,30 @@ export const refreshAccessToken = async (): Promise<void> => {
   await api.post("/auth/refresh");
 };
 
-export const setIsRefreshing = (value: boolean) => {
-  isRefreshing = value;
-};
-
-export const getIsRefreshing = () => isRefreshing;
-
-export const setRefreshPromise = (promise: Promise<void> | null) => {
-  refreshPromise = promise;
-};
-
-export const getRefreshPromise = () => refreshPromise;
-
 export const login = async (
   email: string,
   password: string,
   rememberMe: boolean
-): Promise<void> => {
-  await api.post("/auth/login", { email, password, rememberMe });
+): Promise<AxiosResponse<{ isAuthenticated: boolean }>> => {
+  return api.post("/auth/login", { email, password, rememberMe });
 };
 export const logout = async (): Promise<void> => await api.post("/auth/logout");
 
+export const choosePassword = ({
+  userId,
+  password,
+}: {
+  userId: number;
+  password: string;
+}) => api.put(`/user/${userId}/choose-password`, { password });
+
+export const getAuthState = (): Promise<
+  AxiosResponse<{ isAuthenticated: boolean }>
+> => api.get("/auth/auth-state");
 export const getMyPages = (): Promise<AxiosResponse<Page[]>> =>
   api.get("/pages/my-pages");
 export const getUser: () => Promise<AxiosResponse<IUser>> = async () =>
-  api.get("/users/me");
+  api.get("/user/me");
 export const getFacebookAuthUrl = async (): Promise<string> => {
   const response = await api.get("/auth/facebook/url");
   return response.data.url;
@@ -123,7 +107,7 @@ export const getSocialAccounts = async (): Promise<
   AxiosResponse<SocialAccount[]>
 > => api.get("/social-accounts");
 
-export const getUsers = async () => api.get("/users");
+export const getUsers = async () => api.get("/user");
 
 export const addFacebookPage = async (pageId: string) => {
   await api.post("/facebook/pages", { pageId });
@@ -140,12 +124,11 @@ export const updateSocialAccount = async (
   );
   return response.data as SocialAccount;
 };
-export const createUser = async (data: IUser) =>
-  api.post("/users", { ...data });
+export const createUser = async (data: IUser) => api.post("/user", { ...data });
 export const updateUser = async (data: IUser) =>
-  api.put(`/users/${data.email}`, data);
+  api.put(`/user/${data.email}`, data);
 export const deleteUser = async (userId: number) =>
-  api.delete(`/users/${userId}`);
+  api.delete(`/user/${userId}`);
 
 export const assignUsersToPage = async (pageId: string, userIds: number[]) =>
   api.post(`/pages/assign-users`, { pageId, userIds });

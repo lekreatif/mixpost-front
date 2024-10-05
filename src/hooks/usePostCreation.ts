@@ -1,29 +1,24 @@
 import { useCallback } from "react";
-import { useUpload } from "./useUpload";
-import { usePostApi } from "./usePostApi";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { PostData } from "@/types";
 import { useContext } from "react";
 import { CreatePostContext } from "@/contexts/CreatePostContext";
 import localforage from "localforage";
 import { MediaType, PostType } from "@/types";
+import api from "../services/api";
+import { getVideoDuration } from "./useVideoDuration";
 
-export function determinePostType(medias: { type: MediaType }[]): PostType {
-  if (medias.length === 0) {
-    return PostType.TEXT;
-  }
-
-  if (medias.length === 1) {
-    return medias[0].type === MediaType.VIDEO ? PostType.VIDEO : PostType.IMAGE;
-  }
-
-  return PostType.IMAGE; // Si plusieurs médias, c'est forcément un post de type IMAGE
-}
+type ValidationError =
+  | "Vous devez ajouter du texte ou au moins un média."
+  | "Veuillez sélectionner au moins une page pour publier."
+  | "Un titre est requis pour la vidéo."
+  | "Impossible de déterminer la durée de la vidéo."
+  | "La vidéo doit être d'au moins 3 secondes et ne doit pas dépasser 90s pour les réels."
+  | "La vidéo doit être d'au moins 3 secondes et ne doit pas dépasser 60s pour les stories."
+  | "Une erreur est survenue lors de la vérification de la durée de la vidéo."
+  | "Veuillez sélectionner une date de programmation.";
 
 export const usePostCreation = () => {
   const context = useContext(CreatePostContext);
-  const { uplaodVideo, uploadMultipleImages, uploadImage } = useUpload();
-  const { publish } = usePostApi();
   const queryClient = useQueryClient();
 
   if (!context)
@@ -38,83 +33,138 @@ export const usePostCreation = () => {
     thumbnail,
     isScheduled,
     scheduledDate,
+    videoRatio,
+    postType,
   } = context;
 
   const createPostMutation = useMutation({
     mutationFn: async () => {
-      let mediaUrls: { url: string; type: MediaType }[] = [];
-      let thumbnailUrl = null;
+      const formData = new FormData();
 
-      if (mediaType === MediaType.VIDEO) {
-        const [mediaRes, thumbnailRes] = await Promise.all([
-          uplaodVideo.mutateAsync(medias[0].blob),
-          thumbnail ? uploadImage.mutateAsync(thumbnail) : null,
-        ]);
-        mediaUrls = mediaRes.data.medias.map(m => ({
-          ...m,
-          type: MediaType.VIDEO,
-        }));
-        thumbnailUrl = thumbnailRes?.data.medias[0].url;
-      } else if (mediaType === MediaType.IMAGE) {
-        const mediaRes = await uploadMultipleImages.mutateAsync(
-          medias.map(media => media.blob)
-        );
-        mediaUrls = mediaRes.data.medias.map(m => ({
-          ...m,
-          type: MediaType.IMAGE,
-        }));
+      formData.append("description", content);
+      formData.append("isPublic", isPublic.toString());
+      formData.append("postType", postType);
+      if (mediaType) {
+        formData.append("mediaType", mediaType);
+      }
+      formData.append("videoRatio", videoRatio);
+      selectedPages.forEach(page => {
+        formData.append("pagesIds[]", page.pageId);
+      });
+
+      if (isScheduled && scheduledDate) {
+        formData.append("scheduledFor", scheduledDate.getTime().toString());
       }
 
-      const postType = determinePostType(mediaUrls);
+      if (mediaType === MediaType.VIDEO && medias.length > 0) {
+        formData.append("video", medias[0].blob);
+        if (videoTitle) {
+          formData.append("videoTitle", videoTitle);
+        }
+        if (thumbnail) {
+          formData.append("thumbnail", thumbnail);
+        }
+      } else if (mediaType === MediaType.IMAGE) {
+        medias.forEach(media => formData.append(`images`, media.blob));
+      }
 
-      const postData: PostData = {
-        description: content,
-        medias: mediaUrls,
-        pagesIds: selectedPages.map(p => p.pageId),
-        isPublic,
-        mediaType,
-        postType,
-        videoTitle: mediaType === MediaType.VIDEO ? videoTitle : undefined,
-        thumbnailUrl: thumbnailUrl ? thumbnailUrl : undefined,
-      };
-
-      return publish.mutateAsync(postData);
+      return api.post("/post/publish", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
   });
 
-  const validatePost = useCallback((): string[] => {
-    const errors: string[] = [];
+  const validateContent = useCallback(
+    () =>
+      !content && medias.length === 0
+        ? "Vous devez ajouter du texte ou au moins un média."
+        : null,
+    [content, medias.length]
+  );
 
-    if (!content && medias.length === 0) {
-      errors.push("Vous devez ajouter du texte ou au moins un média.");
-    }
+  const validateVideoTitle = useCallback(
+    () =>
+      mediaType === MediaType.VIDEO && !videoTitle
+        ? "Un titre est requis pour la vidéo."
+        : null,
+    [mediaType, videoTitle]
+  );
 
-    if (mediaType === MediaType.VIDEO) {
-      if (!videoTitle) {
-        errors.push("Un titre est requis pour la vidéo.");
+  const validateVideoDuration =
+    useCallback(async (): Promise<ValidationError | null> => {
+      if (
+        mediaType !== MediaType.VIDEO &&
+        postType !== PostType.REEL &&
+        postType !== PostType.STORY
+      )
+        return null;
+
+      try {
+        const videoDuration = await getVideoDuration(medias[0].blob);
+
+        console.log(videoDuration);
+
+        if (!videoDuration)
+          return "Impossible de déterminer la durée de la vidéo.";
+
+        if (
+          postType === PostType.REEL &&
+          (videoDuration < 3 || videoDuration > 90)
+        ) {
+          return "La vidéo doit être d'au moins 3 secondes et ne doit pas dépasser 90s pour les réels.";
+        }
+
+        if (
+          postType === PostType.STORY &&
+          (videoDuration < 3 || videoDuration > 60)
+        ) {
+          return "La vidéo doit être d'au moins 3 secondes et ne doit pas dépasser 60s pour les stories.";
+        }
+
+        return null;
+      } catch (error) {
+        return "Une erreur est survenue lors de la vérification de la durée de la vidéo.";
       }
-    }
+    }, [mediaType, postType, medias]);
 
-    if (isScheduled && !scheduledDate) {
-      errors.push("Veuillez sélectionner une date de programmation.");
-    }
+  const validateSchedule = useCallback(
+    () =>
+      isScheduled && !scheduledDate
+        ? "Veuillez sélectionner une date de programmation."
+        : null,
+    [isScheduled, scheduledDate]
+  );
 
-    if (selectedPages.length === 0) {
-      errors.push("Veuillez sélectionner au moins une page pour publier.");
-    }
+  const validatePageSelection = useCallback(
+    () =>
+      selectedPages.length === 0
+        ? "Veuillez sélectionner au moins une page pour publier."
+        : null,
+    [selectedPages.length]
+  );
 
-    return errors;
+  const validatePost = useCallback(async (): Promise<ValidationError[]> => {
+    const validationFunctions = [
+      validateContent,
+      validateVideoTitle,
+      validateVideoDuration,
+      validateSchedule,
+      validatePageSelection,
+    ];
+
+    const results = await Promise.all(validationFunctions.map(fn => fn()));
+    return results.filter((error): error is ValidationError => error !== null);
   }, [
-    videoTitle,
-    content,
-    isScheduled,
-    mediaType,
-    medias.length,
-    scheduledDate,
-    selectedPages.length,
+    validateContent,
+    validateVideoTitle,
+    validateVideoDuration,
+    validateSchedule,
+    validatePageSelection,
   ]);
 
   const clearStoredData = async () => {

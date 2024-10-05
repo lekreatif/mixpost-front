@@ -9,10 +9,11 @@ import {
 import { IoSettingsOutline, IoLogOutOutline } from "react-icons/io5";
 import { NavLink } from "react-router-dom";
 import { RxDashboard } from "react-icons/rx";
-import { useAuth } from "@/hooks/useAuth";
 import { USER_ROLE } from "@/types";
 import Logo from "../layout/Logo";
 import { IoIosClose } from "react-icons/io";
+import { useUser } from "@/hooks/useMe";
+import { useLogout } from "@/hooks/useLogout";
 
 export default function Sidebar({
   sidebarOpen,
@@ -21,15 +22,17 @@ export default function Sidebar({
   sidebarOpen: boolean;
   setSidebarOpen: (val: boolean) => void;
 }) {
-  const { logout, user } = useAuth();
-  const handleLogout = (event: MouseEvent<HTMLButtonElement>) => {
+  const { data: userData } = useUser();
+  const { mutate: logout } = useLogout();
+
+  const handleLogout = async (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
-    logout();
+    return logout();
   };
 
   const isSuperAdmin = useMemo(
-    () => user?.role === USER_ROLE.SUPER_ADMIN,
-    [user]
+    () => (userData ? userData.data.role === USER_ROLE.SUPER_ADMIN : false),
+    [userData]
   );
   return (
     <>
@@ -94,8 +97,9 @@ export default function Sidebar({
         </Dialog>
       </Transition>
 
-      {/* Static sidebar for desktop */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-40 lg:flex-col">
+      <div
+        className={`hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-40 lg:flex-col`}
+      >
         <SidebarContent
           isSuperAdmin={isSuperAdmin}
           handleLogout={handleLogout}
@@ -113,7 +117,9 @@ function SidebarContent({
   handleLogout: (event: MouseEvent<HTMLButtonElement>) => void;
 }) {
   return (
-    <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-primary-50 px-6 pb-4 border-r shadow-sm">
+    <div
+      className={`flex grow flex-col gap-y-5 overflow-y-auto bg-primary-50 px-6 pb-4 border-r shadow-sm`}
+    >
       <div className="flex h-12 shrink-0 items-center">
         <NavLink
           className="flex w-full items-center gap-1 border-b py-2 text-center font-sans text-lg font-bold"

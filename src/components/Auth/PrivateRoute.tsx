@@ -1,31 +1,25 @@
-import React, { useEffect } from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
-import { useAuth } from '@/hooks/useAuth'
-import { FullPageLoader } from '@/components/layout/FullPageLoader'
+import React from "react";
+import { Navigate, useLocation } from "react-router-dom";
+import { FullPageLoader } from "@/components/layout/FullPageLoader";
+import { useIsAuthenticated } from "@/hooks/useIsAuthenticated";
 
 interface PrivateRouteProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading, resetIdleTimer } = useAuth()
-  const location = useLocation()
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      resetIdleTimer()
-    }
-  }, [isAuthenticated, location, resetIdleTimer])
+  const location = useLocation();
+  const { data, isLoading } = useIsAuthenticated();
 
   if (isLoading) {
-    return <FullPageLoader />
+    return <FullPageLoader />;
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />
+  if (!data?.data.isAuthenticated) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
-  return <>{children}</>
-}
+  return <>{children}</>;
+};
 
-export default PrivateRoute
+export default PrivateRoute;
