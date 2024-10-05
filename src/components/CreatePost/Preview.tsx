@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useEffect, useCallback } from "react";
+import React, { useMemo, useRef, useCallback } from "react";
 import { Page, VideoRatio, PostType, Media } from "@/types";
 import { SlLike } from "react-icons/sl";
 import { FaRegComment } from "react-icons/fa6";
@@ -13,7 +13,6 @@ import {
   FourImageDisplay,
 } from "./ImagesDisplay";
 import { usePostCreation } from "@/hooks/usePostCreation";
-import { useVideoDuration } from "@/hooks/useVideoDuration";
 
 const TextPreview = ({
   content,
@@ -72,7 +71,7 @@ const ImagePreview = ({
 
 const VideoPreview = ({
   medias,
-  aspectRatio,
+  // aspectRatio,
 }: {
   medias: { blob: Blob; fileName: string }[];
   aspectRatio: number;
@@ -81,32 +80,32 @@ const VideoPreview = ({
     return null;
   }
 
-  const containerStyle = {
-    width: "100%",
-    paddingTop: `${(1 / aspectRatio) * 100}%`,
-    position: "relative" as const,
-    margin: "auto",
-  };
+  // const containerStyle = {
+  //   width: "100%",
+  //   paddingTop: `${(1 / aspectRatio) * 100}%`,
+  //   position: "relative" as const,
+  //   margin: "auto",
+  // };
 
-  const videoStyle = {
-    position: "absolute" as const,
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: aspectRatio === 9 / 16 ? `${(400 * 9) / 16}px` : "100%",
-    height: aspectRatio === 1 || aspectRatio === 9 / 16 ? "100%" : "auto",
-    objectFit: "cover" as const,
-  };
+  // const videoStyle = {
+  //   position: "absolute" as const,
+  //   top: "50%",
+  //   left: "50%",
+  //   transform: "translate(-50%, -50%)",
+  //   width: aspectRatio === 9 / 16 ? `${(400 * 9) / 16}px` : "100%",
+  //   height: aspectRatio === 1 || aspectRatio === 9 / 16 ? "100%" : "auto",
+  //   objectFit: "cover" as const,
+  // };
 
   return (
     <div
       className="flex items-center justify-center bg-primary-950"
-      style={containerStyle}
+      // style={containerStyle}
     >
       <video
         controls
         src={URL.createObjectURL(medias[0].blob)}
-        style={videoStyle}
+        // style={videoStyle}
       />
     </div>
   );
@@ -167,15 +166,12 @@ const ReelPreview = ({
   medias,
   page,
   content,
-  setVideoDuration,
 }: {
   medias: Media[];
   page: Page;
   content: string;
-  setVideoDuration: (duration: number | null) => void;
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const duration = useVideoDuration(videoRef);
 
   const togglePlayPause = useCallback(() => {
     if (videoRef.current) {
@@ -186,10 +182,6 @@ const ReelPreview = ({
       }
     }
   }, []);
-
-  useEffect(() => {
-    setVideoDuration(duration);
-  }, [duration, setVideoDuration]);
 
   if (!medias.length) return null;
 
@@ -206,7 +198,7 @@ const ReelPreview = ({
           onClick={togglePlayPause}
           src={URL.createObjectURL(media.blob)}
           className="h-full object-cover object-center aspect-[9/16] mx-auto border rounded-xl shadow-sm"
-          loop
+          // loop
           autoPlay
         />
       ) : (
@@ -260,7 +252,6 @@ const RenderPagePreview = ({
   postType,
   medias,
   videoRatio,
-  setVideoDuration,
 }: {
   page: Page;
   isPublic: boolean;
@@ -268,7 +259,6 @@ const RenderPagePreview = ({
   postType: PostType;
   medias: Media[];
   videoRatio: string;
-  setVideoDuration: (duration: number | null) => void;
 }) => {
   const MediaPreviewMemo = useMemo(() => {
     switch (postType) {
@@ -288,14 +278,7 @@ const RenderPagePreview = ({
           />
         );
       case PostType.REEL:
-        return (
-          <ReelPreview
-            medias={medias}
-            page={page}
-            content={content}
-            setVideoDuration={setVideoDuration}
-          />
-        );
+        return <ReelPreview medias={medias} page={page} content={content} />;
       case PostType.STORY:
         return <StoryPreview medias={medias} page={page} content={content} />;
       case PostType.TEXT:
@@ -354,15 +337,8 @@ const RenderPagePreview = ({
 };
 
 const Preview: React.FC = React.memo(() => {
-  const {
-    selectedPages,
-    content,
-    postType,
-    isPublic,
-    medias,
-    videoRatio,
-    setVideoDuration,
-  } = usePostCreation();
+  const { selectedPages, content, postType, isPublic, medias, videoRatio } =
+    usePostCreation();
 
   const RenderedPreviewsMemo = useMemo(
     () =>
@@ -375,7 +351,6 @@ const Preview: React.FC = React.memo(() => {
           medias={medias}
           key={page.pageId}
           videoRatio={videoRatio}
-          setVideoDuration={setVideoDuration}
         />
       )),
     [selectedPages, isPublic, content, postType, medias, videoRatio]

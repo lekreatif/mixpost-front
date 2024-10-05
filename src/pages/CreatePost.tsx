@@ -4,7 +4,7 @@ import { CreatePostProvider } from "@/contexts/CreatePostContext";
 import PageSelection from "@/components/CreatePost/PageSelection";
 import MediaSelection from "@/components/CreatePost/MediaSelection";
 import ContentEditor from "@/components/CreatePost/ContentEditor";
-import ScheduleSection from "@/components/CreatePost/ScheduleSection";
+// import ScheduleSection from "@/components/CreatePost/ScheduleSection";
 import VisibilitySection from "@/components/CreatePost/VisibilitySection";
 import ActionButtons from "@/components/CreatePost/ActionButtons";
 import PostTypeSelection from "@/components/CreatePost/PostTypeSelection";
@@ -21,19 +21,23 @@ const CreatePostPage: React.FC = () => {
         return (
           <>
             <ContentEditor />
-            <ScheduleSection />
+            <VisibilitySection />
+          </>
+        );
+      case PostType.STORY:
+        return (
+          <>
+            <MediaSelection />
             <VisibilitySection />
           </>
         );
       case PostType.IMAGE:
       case PostType.VIDEO:
       case PostType.REEL:
-      case PostType.STORY:
         return (
           <>
             <MediaSelection />
             <ContentEditor />
-            <ScheduleSection />
             <VisibilitySection />
           </>
         );

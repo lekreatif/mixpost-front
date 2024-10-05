@@ -75,34 +75,35 @@ const ActionButtons: React.FC = () => {
     // Logique pour sauvegarder le brouillon
   };
 
-  const handlePublish = () => {
-    const errors = validatePost();
-    if (errors.length > 0) {
-      errors.forEach(error => addNotification("error", error));
-      return;
+  const handlePublish = async () => {
+    try {
+      const errors = await validatePost();
+      if (errors.length > 0) {
+        errors.forEach(error => addNotification("error", error));
+        return;
+      }
+
+      setIsPublishing(true);
+      await createPostMutation.mutateAsync();
+
+      openDialog({
+        title: "Publication réussie",
+        message: "Votre post a été publié avec succès.",
+        confirmLabel: "OK",
+        onConfirm: handleSuccessConfirm,
+      });
+    } catch (err) {
+      openDialog({
+        title: "Erreur de publication",
+        message:
+          (err as Error).message ||
+          "Une erreur est survenue lors de la publication.",
+        confirmLabel: "Fermer",
+        onConfirm: closeDialog,
+      });
+    } finally {
+      setIsPublishing(false);
     }
-    setIsPublishing(true);
-    createPostMutation
-      .mutateAsync()
-      .then(() => {
-        openDialog({
-          title: "Publication réussie",
-          message: "Votre post a été publié avec succès.",
-          confirmLabel: "OK",
-          onConfirm: handleSuccessConfirm,
-        });
-      })
-      .catch(err => {
-        console.log(err.message);
-        openDialog({
-          title: "Erreur de publication",
-          message:
-            err.message || "Une erreur est survenue lors de la publication.",
-          confirmLabel: "Fermer",
-          onConfirm: closeDialog,
-        });
-      })
-      .finally(() => setIsPublishing(false));
   };
 
   const handleSuccessConfirm = async () => {
