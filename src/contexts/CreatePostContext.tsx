@@ -29,8 +29,6 @@ interface CreatePostContextType {
   setPostType: (
     value: PostType | ((val: PostType) => PostType)
   ) => Promise<void>;
-  videoDuration: number | null;
-  setVideoDuration: (duration: number | null) => void;
 }
 
 export const CreatePostContext = createContext<
@@ -81,11 +79,6 @@ export const CreatePostProvider: React.FC<{ children: React.ReactNode }> = ({
     PostType.TEXT
   );
 
-  const [videoDuration, setVideoDuration] = useLocalStoragePost<number | null>(
-    "videoDuration",
-    null
-  );
-
   const [isPublishing, setIsPublishing] = useState(false);
   return (
     <CreatePostContext.Provider
@@ -114,8 +107,6 @@ export const CreatePostProvider: React.FC<{ children: React.ReactNode }> = ({
         setVideoRatio,
         postType,
         setPostType,
-        videoDuration,
-        setVideoDuration,
       }}
     >
       {children}

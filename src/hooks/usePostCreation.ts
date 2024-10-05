@@ -5,6 +5,17 @@ import { CreatePostContext } from "@/contexts/CreatePostContext";
 import localforage from "localforage";
 import { MediaType, PostType } from "@/types";
 import api from "../services/api";
+import { getVideoDuration } from "./useVideoDuration";
+
+type ValidationError =
+  | "Vous devez ajouter du texte ou au moins un média."
+  | "Veuillez sélectionner au moins une page pour publier."
+  | "Un titre est requis pour la vidéo."
+  | "Impossible de déterminer la durée de la vidéo."
+  | "La vidéo doit être d'au moins 3 secondes et ne doit pas dépasser 90s pour les réels."
+  | "La vidéo doit être d'au moins 3 secondes et ne doit pas dépasser 60s pour les stories."
+  | "Une erreur est survenue lors de la vérification de la durée de la vidéo."
+  | "Veuillez sélectionner une date de programmation.";
 
 export const usePostCreation = () => {
   const context = useContext(CreatePostContext);
@@ -24,7 +35,6 @@ export const usePostCreation = () => {
     scheduledDate,
     videoRatio,
     postType,
-    videoDuration,
   } = context;
 
   const createPostMutation = useMutation({
@@ -85,18 +95,42 @@ export const usePostCreation = () => {
     [mediaType, videoTitle]
   );
 
-  const validateVideoDuration = useCallback(
-    () =>
-      mediaType === MediaType.VIDEO &&
-      (!videoDuration ||
-        (postType === PostType.REEL &&
-          (videoDuration < 3 || videoDuration > 90)) ||
-        (postType === PostType.STORY &&
-          (videoDuration < 3 || videoDuration > 60)))
-        ? "La vidéo doit être d'au moins 3 secondes et ne dois pas dépasser 90s pour les réels et 60s pour les story."
-        : null,
-    [mediaType, videoDuration, postType]
-  );
+  const validateVideoDuration =
+    useCallback(async (): Promise<ValidationError | null> => {
+      if (
+        mediaType !== MediaType.VIDEO &&
+        postType !== PostType.REEL &&
+        postType !== PostType.STORY
+      )
+        return null;
+
+      try {
+        const videoDuration = await getVideoDuration(medias[0].blob);
+
+        console.log(videoDuration);
+
+        if (!videoDuration)
+          return "Impossible de déterminer la durée de la vidéo.";
+
+        if (
+          postType === PostType.REEL &&
+          (videoDuration < 3 || videoDuration > 90)
+        ) {
+          return "La vidéo doit être d'au moins 3 secondes et ne doit pas dépasser 90s pour les réels.";
+        }
+
+        if (
+          postType === PostType.STORY &&
+          (videoDuration < 3 || videoDuration > 60)
+        ) {
+          return "La vidéo doit être d'au moins 3 secondes et ne doit pas dépasser 60s pour les stories.";
+        }
+
+        return null;
+      } catch (error) {
+        return "Une erreur est survenue lors de la vérification de la durée de la vidéo.";
+      }
+    }, [mediaType, postType, medias]);
 
   const validateSchedule = useCallback(
     () =>
@@ -114,7 +148,7 @@ export const usePostCreation = () => {
     [selectedPages.length]
   );
 
-  const validatePost = useCallback((): string[] => {
+  const validatePost = useCallback(async (): Promise<ValidationError[]> => {
     const validationFunctions = [
       validateContent,
       validateVideoTitle,
@@ -123,18 +157,8 @@ export const usePostCreation = () => {
       validatePageSelection,
     ];
 
-    return validationFunctions
-      .map(fn => fn())
-      .filter(
-        (
-          error
-        ): error is
-          | "Vous devez ajouter du texte ou au moins un média."
-          | "Veuillez sélectionner au moins une page pour publier."
-          | "Un titre est requis pour la vidéo."
-          | "La vidéo doit être d'au moins 3 secondes et ne dois pas dépasser 90s pour les réels et 60s pour les story."
-          | "Veuillez sélectionner une date de programmation." => error !== null
-      );
+    const results = await Promise.all(validationFunctions.map(fn => fn()));
+    return results.filter((error): error is ValidationError => error !== null);
   }, [
     validateContent,
     validateVideoTitle,
