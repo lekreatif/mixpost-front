@@ -97,17 +97,12 @@ export const usePostCreation = () => {
 
   const validateVideoDuration =
     useCallback(async (): Promise<ValidationError | null> => {
-      if (
-        mediaType !== MediaType.VIDEO &&
-        postType !== PostType.REEL &&
-        postType !== PostType.STORY
-      )
-        return null;
+
+      console.log(mediaType)
+      if (mediaType !== MediaType.VIDEO) return null;
 
       try {
         const videoDuration = await getVideoDuration(medias[0].blob);
-
-        console.log(videoDuration);
 
         if (!videoDuration)
           return "Impossible de déterminer la durée de la vidéo.";
