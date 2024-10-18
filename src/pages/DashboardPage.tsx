@@ -26,7 +26,7 @@ const DashboardPage = () => {
 
   return (
     <>
-      <div className="flex min-h-full flex-col pt-12 md:py-0">
+      <div className="flex min-h-full flex-col pt-12 md:pt-4 md:pb-0">
         <div className="flex h-full flex-1 flex-col">
           <div className="mb-8 flex flex-col md:flex-row md:items-center md:gap-4">
             <div className="">

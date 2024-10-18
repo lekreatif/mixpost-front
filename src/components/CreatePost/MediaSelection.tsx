@@ -4,8 +4,8 @@ import { Button, Field, Input, Label } from "@headlessui/react";
 import { useMediaSelection } from "@/hooks/useMediaSelection";
 import VideoThumbnailSelector from "./VideoThumbnailSelector";
 import DraggableImageList from "./DraggableImageList";
-import { MediaType, VideoRatio, PostType } from "@/types";
-import { RadioGroup, Radio } from "@headlessui/react";
+import { MediaType, PostType /*VideoRatio */ } from "@/types";
+// import { RadioGroup, Radio } from "@headlessui/react";
 
 const MediaSelection: React.FC = () => {
   const {
@@ -22,17 +22,17 @@ const MediaSelection: React.FC = () => {
     setSuggestedThumbnails,
     customThumbnail,
     medias,
-    videoRatio,
-    setVideoRatio,
+    // videoRatio,
+    // setVideoRatio,
     postType,
   } = useMediaSelection();
 
-  const ratioOptions = [
-    { id: VideoRatio.ORIGINAL, name: "Original" },
-    { id: VideoRatio.SQUARE, name: "Carré (1:1)" },
-    { id: VideoRatio.LANDSCAPE, name: "Paysage (16:9)" },
-    { id: VideoRatio.PORTRAIT, name: "Vertical (9:16)" },
-  ];
+  // const ratioOptions = [
+  //   { id: VideoRatio.ORIGINAL, name: "Original" },
+  //   { id: VideoRatio.SQUARE, name: "Carré (1:1)" },
+  //   { id: VideoRatio.LANDSCAPE, name: "Paysage (16:9)" },
+  //   { id: VideoRatio.PORTRAIT, name: "Vertical (9:16)" },
+  // ];
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -59,7 +59,7 @@ const MediaSelection: React.FC = () => {
     if (mediaType === MediaType.VIDEO && medias.length > 0) {
       return (
         <div className="flex items-center justify-between rounded-md bg-primary-50 p-2">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 z-[1]">
             {suggestedThumbnails.length > 0 && (
               <img
                 src={URL.createObjectURL(suggestedThumbnails[1])}
@@ -188,7 +188,7 @@ const MediaSelection: React.FC = () => {
               className="mt-1 block h-10 w-full rounded-md border border-primary-300 bg-primary-50 px-4 text-sm font-light text-primary-700 data-[focus]:border-secondary-300 data-[focus]:outline-none sm:text-sm"
             />
           </Field>
-          {postType === PostType.VIDEO && (
+          {/* {postType === PostType.VIDEO && (
             <Field>
               <RadioGroup
                 value={videoRatio}
@@ -228,7 +228,7 @@ const MediaSelection: React.FC = () => {
                 </div>
               </RadioGroup>
             </Field>
-          )}
+          )} */}
         </div>
       )}
       {mediaType === MediaType.VIDEO && medias.length > 0 && (

@@ -53,8 +53,10 @@ const TextPreview = ({
 
 const ImagePreview = ({
   medias,
+  content,
 }: {
   medias: { blob: Blob; fileName: string }[];
+  content: string;
 }) => {
   const displays: { [key: number]: React.ReactElement } = {
     1: <SingleImageDisplay {...medias[0]} />,
@@ -63,50 +65,83 @@ const ImagePreview = ({
     4: <FourImageDisplay medias={medias} />,
   };
   return (
-    <div className="mb-0 flex items-center justify-center">
-      {displays[medias.length]}
+    <div className="flex flex-col gap-2">
+      <TextPreview content={content} />
+      <div className="mb-0 flex items-center justify-center">
+        {displays[medias.length]}
+      </div>
     </div>
   );
 };
 
-const VideoPreview = ({
-  medias,
-  // aspectRatio,
-}: {
-  medias: { blob: Blob; fileName: string }[];
+interface VideoPreviewProps {
+  medias: Media[];
   aspectRatio: number;
+  content: string;
+}
+
+const VideoPreview: React.FC<VideoPreviewProps> = ({
+  medias,
+  aspectRatio,
+  content,
 }) => {
+  // const containerStyle = useMemo(
+  //   () => ({
+  //     width: "100%",
+  //     paddingTop: `${(1 / aspectRatio) * 100}%`,
+  //     position: "relative" as const,
+  //     margin: "auto",
+  //     overflow: "hidden",
+  //   }),
+  //   [aspectRatio]
+  // );
+
+  const videoStyle = useCallback(
+    () => ({
+      position: "absolute" as const,
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      width: aspectRatio === 9 / 16 ? `${(400 * 9) / 16}px` : "100%",
+      height: aspectRatio === 1 || aspectRatio === 9 / 16 ? "100%" : "auto",
+      objectFit: "cover" as const,
+    }),
+    [aspectRatio]
+  );
+
+  const Video = useMemo(() => {
+    if (medias.length > 0) {
+      return (
+        <video
+          controls
+          src={URL.createObjectURL(medias[0].blob)}
+          style={{
+            height: "100%",
+            aspectRatio: "auto",
+            margin: "auto",
+          }}
+        />
+      );
+    }
+    return null;
+  }, [medias, videoStyle]);
+
   if (!medias.length) {
     return null;
   }
 
-  // const containerStyle = {
-  //   width: "100%",
-  //   paddingTop: `${(1 / aspectRatio) * 100}%`,
-  //   position: "relative" as const,
-  //   margin: "auto",
-  // };
-
-  // const videoStyle = {
-  //   position: "absolute" as const,
-  //   top: "50%",
-  //   left: "50%",
-  //   transform: "translate(-50%, -50%)",
-  //   width: aspectRatio === 9 / 16 ? `${(400 * 9) / 16}px` : "100%",
-  //   height: aspectRatio === 1 || aspectRatio === 9 / 16 ? "100%" : "auto",
-  //   objectFit: "cover" as const,
-  // };
-
   return (
-    <div
-      className="flex items-center justify-center bg-primary-950"
-      // style={containerStyle}
-    >
-      <video
-        controls
-        src={URL.createObjectURL(medias[0].blob)}
-        // style={videoStyle}
-      />
+    <div className="flex flex-col gap-2">
+      <TextPreview content={content} />
+      <div
+        className="flex items-center justify-center bg-primary-950 relative"
+        style={{
+          width: "100%",
+          height: "300px",
+        }}
+      >
+        {Video}
+      </div>
     </div>
   );
 };
@@ -128,7 +163,6 @@ const StoryPreview = ({
     <div className="flex items-center justify-center bg-transparent h-[512px] relative aspect-[9/16] mx-auto">
       {media.type === "VIDEO" ? (
         <video
-          // controls
           src={URL.createObjectURL(media.blob)}
           className="h-full object-cover object-center aspect-[9/16] mx-auto border rounded-xl shadow-sm"
         />
@@ -263,18 +297,13 @@ const RenderPagePreview = ({
   const MediaPreviewMemo = useMemo(() => {
     switch (postType) {
       case PostType.IMAGE:
-        return <ImagePreview medias={medias} />;
+        return <ImagePreview content={content} medias={medias} />;
       case PostType.VIDEO:
         return (
           <VideoPreview
             medias={medias}
-            aspectRatio={
-              videoRatio === VideoRatio.SQUARE
-                ? 1
-                : videoRatio === VideoRatio.LANDSCAPE
-                  ? 16 / 9
-                  : 16 / 9
-            }
+            aspectRatio={videoRatio === VideoRatio.SQUARE ? 1 : 16 / 9}
+            content={content}
           />
         );
       case PostType.REEL:
@@ -285,7 +314,7 @@ const RenderPagePreview = ({
       default:
         return null;
     }
-  }, [postType, medias, videoRatio]);
+  }, [postType, medias, videoRatio, content, page]);
 
   const ContentPreviewMemo = useMemo(() => {
     if (postType === PostType.TEXT) {

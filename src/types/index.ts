@@ -83,3 +83,45 @@ export enum PostStatus {
   PUBLISHED = "PUBLISHED",
   FAILED = "FAILED",
 }
+
+// src/types/upload.ts
+export interface UploadMetadata {
+  postId: string;
+}
+
+export interface ChunkMetadata {
+  chunkIndex: number;
+}
+
+export interface UploadStatus {
+  uploadId: string;
+  progress: number;
+}
+
+// src/types/post.ts
+export interface CreatePostResponse {
+  postId: string;
+}
+
+export interface PublishPostData {
+  videoUrl: string;
+}
+
+// src/types/network.ts
+export interface NetworkSpeed {
+  mbps: number;
+}
+
+// Pour le Web Worker
+export interface WorkerMessage {
+  type: "progress" | "complete" | "error";
+  progress?: number;
+  error?: string;
+}
+
+export interface WorkerInitData {
+  file: File;
+  uploadId: string;
+  chunkSize: number;
+  apiEndpoint: string;
+}

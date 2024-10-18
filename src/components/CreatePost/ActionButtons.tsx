@@ -32,7 +32,6 @@ const ActionButtons: React.FC = () => {
     validatePost,
     isPublishing,
     setIsPublishing,
-    // transcodingProgress,
   } = usePostCreation();
 
   const openDialog = (config: Omit<DialogConfig, "isOpen">) => {
