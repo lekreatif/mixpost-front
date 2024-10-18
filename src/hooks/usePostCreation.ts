@@ -1,11 +1,12 @@
-import { useCallback } from "react";
+import { useCallback, useContext } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useContext } from "react";
-import { CreatePostContext } from "@/contexts/CreatePostContext";
 import localforage from "localforage";
-import { MediaType, PostType } from "@/types";
+import { MediaType, Page, PostType } from "@/types";
 import api from "../services/api";
 import { getVideoDuration } from "./useVideoDuration";
+import { useS3Upload } from "./useS3Upload";
+import { CreatePostContext } from "@/contexts/CreatePostContext";
+import { v4 as uuidv4 } from "uuid";
 
 type ValidationError =
   | "Vous devez ajouter du texte ou au moins un média."
@@ -23,6 +24,7 @@ export const usePostCreation = () => {
 
   if (!context)
     throw new Error("useCreatePost must be used within a CreatePostProvider");
+
   const {
     medias,
     content,
@@ -35,42 +37,69 @@ export const usePostCreation = () => {
     scheduledDate,
     videoRatio,
     postType,
+    setProgress,
   } = context;
+
+  const { uploadBlob, uploadMultipleBlobs } = useS3Upload();
 
   const createPostMutation = useMutation({
     mutationFn: async () => {
-      const formData = new FormData();
+      let postData: {
+        [key: string]:
+          | boolean
+          | string
+          | MediaType
+          | Page[]
+          | string[]
+          | { url: string; type: MediaType }[];
+      } = {
+        description: content,
+        isPublic,
+        postType,
+        videoRatio,
+        pagesIds: selectedPages.map(p => p.pageId),
+      };
 
-      formData.append("description", content);
-      formData.append("isPublic", isPublic.toString());
-      formData.append("postType", postType);
       if (mediaType) {
-        formData.append("mediaType", mediaType);
+        postData = { ...postData, mediaType };
       }
-      formData.append("videoRatio", videoRatio);
-      selectedPages.forEach(page => {
-        formData.append("pagesIds[]", page.pageId);
-      });
 
       if (isScheduled && scheduledDate) {
-        formData.append("scheduledFor", scheduledDate.getTime().toString());
+        postData["scheduledFor"] = scheduledDate.getTime().toString();
       }
 
       if (mediaType === MediaType.VIDEO && medias.length > 0) {
-        formData.append("video", medias[0].blob);
-        if (videoTitle) {
-          formData.append("videoTitle", videoTitle);
-        }
-        if (thumbnail) {
-          formData.append("thumbnail", thumbnail);
+        try {
+          const mediaUrl = await uploadBlob(medias[0], progress =>
+            setProgress(progress)
+          );
+          postData["videoUrl"] = mediaUrl;
+          if (thumbnail) {
+            console.log(thumbnail.type);
+            postData["thumbnailUrl"] = await uploadBlob({
+              blob: thumbnail,
+              fileName: `${uuidv4()}.${thumbnail.type.replace("image/", "")}`,
+              type: MediaType.IMAGE,
+            });
+          }
+          if (videoTitle) {
+            postData["videoTitle"] = videoTitle;
+          }
+        } catch (error) {
+          throw new Error((error as Error).message);
         }
       } else if (mediaType === MediaType.IMAGE) {
-        medias.forEach(media => formData.append(`images`, media.blob));
+        postData["medias"] = (
+          await uploadMultipleBlobs(medias, progress => setProgress(progress))
+        ).map(m => ({
+          url: m,
+          type: MediaType.IMAGE,
+        }));
       }
 
-      return api.post("/post/publish", formData, {
+      return api.post("/post/publish", postData, {
         headers: {
-          "Content-Type": "multipart/form-data",
+          "Content-Type": "application/json",
         },
       });
     },
@@ -97,18 +126,10 @@ export const usePostCreation = () => {
 
   const validateVideoDuration =
     useCallback(async (): Promise<ValidationError | null> => {
-      if (
-        mediaType !== MediaType.VIDEO &&
-        postType !== PostType.REEL &&
-        postType !== PostType.STORY
-      )
-        return null;
+      if (mediaType !== MediaType.VIDEO) return null;
 
       try {
         const videoDuration = await getVideoDuration(medias[0].blob);
-
-        console.log(videoDuration);
-
         if (!videoDuration)
           return "Impossible de déterminer la durée de la vidéo.";
 
@@ -128,6 +149,7 @@ export const usePostCreation = () => {
 
         return null;
       } catch (error) {
+        console.error("Error checking video duration:", error);
         return "Une erreur est survenue lors de la vérification de la durée de la vidéo.";
       }
     }, [mediaType, postType, medias]);

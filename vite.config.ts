@@ -15,7 +15,9 @@ export default defineConfig(({ mode }) => {
         types: path.resolve(__dirname, "./src/types"),
       },
     },
-    define: {},
+    define: {
+      global: "globalThis",
+    },
     server: {
       port: 3000,
       proxy: {

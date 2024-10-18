@@ -29,6 +29,8 @@ interface CreatePostContextType {
   setPostType: (
     value: PostType | ((val: PostType) => PostType)
   ) => Promise<void>;
+  progress: number;
+  setProgress: (progress: number) => void;
 }
 
 export const CreatePostContext = createContext<
@@ -80,6 +82,8 @@ export const CreatePostProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   const [isPublishing, setIsPublishing] = useState(false);
+
+  const [progress, setProgress] = useState(0);
   return (
     <CreatePostContext.Provider
       value={{
@@ -107,6 +111,8 @@ export const CreatePostProvider: React.FC<{ children: React.ReactNode }> = ({
         setVideoRatio,
         postType,
         setPostType,
+        progress,
+        setProgress,
       }}
     >
       {children}

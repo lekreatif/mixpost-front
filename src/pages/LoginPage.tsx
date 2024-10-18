@@ -62,7 +62,7 @@ const LoginPage: React.FC = () => {
   }
 
   return (
-    <div className="h-dvh w-dvh flex justify-center bg-[url(https://images.unsplash.com/photo-1726910133626-9b573eca70ff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMTc3M3wwfDF8YWxsfDJ8fHx8fHx8fDE3MjgwNTAxMjV8&ixlib=rb-4.0.3&q=80&w=2000)]">
+    <div className="h-dvh w-dvh flex justify-center bg-[url(https://images.unsplash.com/photo-1726910133626-9b573eca70ff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMTc3M3wwfDF8YWxsfDJ8fHx8fHx8fDE3MjgwNTAxMjV8&ixlib=rb-4.0.3&q=80&w=2000)] bg-cover bg-center">
       <div className="max-w-sm w-full grid place-content-center">
         <div className="w-[20rem] lg:w-[24rem]  space-y-2 border p-4 lg:p-8 rounded-md shadow-sm bg-primary-100">
           <div className="h-10 text-center">
