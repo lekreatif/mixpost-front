@@ -1,103 +1,104 @@
 import { Media } from "@/types";
-import AWS from "aws-sdk";
-import S3 from "aws-sdk/clients/s3";
+import api from "../services/api";
+
+const sanitizeFileName = (fileName: string): string => {
+  const [name, ext] = fileName.split(".");
+  const sanitized = name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9-]/g, "-")
+    .replace(/--+/g, "-")
+    .replace(/^-|-$/g, "");
+  return `${sanitized}.${ext}`;
+};
 
 export const useS3Upload = () => {
-  const {
-    VITE_S3_ACCESS_KEY,
-    VITE_S3_SECRET_KEY,
-    VITE_S3_REGION,
-    VITE_S3_BUCKET,
-  } = import.meta.env;
-
-  // Valider les variables d'environnement
-  if (
-    !VITE_S3_ACCESS_KEY ||
-    !VITE_S3_SECRET_KEY ||
-    !VITE_S3_REGION ||
-    !VITE_S3_BUCKET
-  ) {
-    throw new Error(
-      "Configuration S3 manquante dans les variables d'environnement."
-    );
-  }
-
-  // Configuration AWS
-  AWS.config.update({
-    accessKeyId: VITE_S3_ACCESS_KEY,
-    secretAccessKey: VITE_S3_SECRET_KEY,
-  });
-
-  const s3 = new S3({
-    params: {
-      Bucket: VITE_S3_BUCKET,
-    },
-    region: VITE_S3_REGION,
-  });
-
   const uploadBlob = async (
-    file: Media,
+    media: Media,
     onProgress?: (progress: number) => void
   ): Promise<string> => {
-    const params = {
-      Bucket: VITE_S3_BUCKET,
-      Key: file.fileName,
-      Body: file.blob,
-      ContentType: file.blob.type,
-    };
-
     try {
-      const managedUpload = s3.upload(params);
+      const sanitizedFileName = sanitizeFileName(media.fileName);
 
-      managedUpload.on("httpUploadProgress", evt => {
-        const progress = Math.round((evt.loaded * 100) / evt.total);
-        if (onProgress) {
-          onProgress(progress);
-        }
+      const { data: initData } = await api.post("/upload/init", {
+        fileName: sanitizedFileName,
       });
 
-      const result = await managedUpload.promise();
-      return result.Location; // Retourne l'URL du fichier téléchargé
-    } catch (error) {
-      console.error("Erreur lors du téléchargement du fichier:", error);
-      if (error instanceof Error) {
-        if (error.name === "RequestAbortedError") {
-          console.error("Le téléchargement a été interrompu.");
-        } else if (error.name === "NetworkingError") {
-          console.error("Erreur réseau lors du téléchargement.");
-        }
+      const { uploadId, key } = initData;
+      const chunkSize = 5 * 1024 * 1024;
+      const chunks = Math.ceil(media.blob.size / chunkSize);
+      const completedParts = [];
+
+      for (let index = 0; index < chunks; index++) {
+        const start = index * chunkSize;
+        const end = Math.min(start + chunkSize, media.blob.size);
+        const chunk = media.blob.slice(start, end);
+
+        const formData = new FormData();
+        formData.append("chunk", chunk);
+        formData.append("key", key);
+        formData.append("uploadId", uploadId);
+        formData.append("partNumber", String(index + 1));
+
+        const response = await api.post("/upload/chunk", formData, {
+          onUploadProgress: progressEvent => {
+            if (onProgress && progressEvent.total) {
+              const chunkProgress =
+                (progressEvent.loaded / progressEvent.total) * 100;
+              const totalProgress =
+                ((index + chunkProgress / 100) / chunks) * 100;
+              onProgress(Math.round(totalProgress));
+            }
+          },
+        });
+
+        completedParts.push({
+          PartNumber: index + 1,
+          ETag: response.data.ETag.replace(/"/g, ""), // Retirer les guillemets
+        });
       }
+
+      completedParts.sort((a, b) => a.PartNumber - b.PartNumber);
+
+      const { data: finalResult } = await api.post("/upload/complete", {
+        uploadId,
+        key,
+        parts: completedParts.map(part => ({
+          ETag: part.ETag, // Gardons l'ETag tel que retourné par S3
+          PartNumber: part.PartNumber,
+        })),
+      });
+
+      return finalResult.medias[0].url;
+    } catch (error) {
+      console.error("Upload error:", error);
       throw error;
     }
   };
 
   const uploadMultipleBlobs = async (
-    files: Media[],
+    medias: Media[],
     onTotalProgress?: (progress: number) => void
   ): Promise<string[]> => {
-    const totalSize = files.reduce((acc, file) => acc + file.blob.size, 0);
+    const totalSize = medias.reduce((acc, media) => acc + media.blob.size, 0);
     let uploadedSize = 0;
 
-    const uploadPromises = files.map(file => {
-      return uploadBlob(file, progress => {
-        const blobSize = file.blob.size;
-        const blobUploadedSize = (progress / 100) * blobSize;
-        uploadedSize += blobUploadedSize;
-        const totalProgress = Math.round((uploadedSize / totalSize) * 100);
-        if (onTotalProgress) {
-          onTotalProgress(totalProgress);
-        }
-      });
-    });
-
     try {
-      const results = await Promise.all(uploadPromises);
-      return results;
+      const uploadPromises = medias.map(async media => {
+        return uploadBlob(media, progress => {
+          if (onTotalProgress) {
+            const mediaSize = media.blob.size;
+            const mediaUploadedSize = (progress / 100) * mediaSize;
+            uploadedSize = uploadedSize + mediaUploadedSize;
+            const totalProgress = Math.round((uploadedSize / totalSize) * 100);
+            onTotalProgress(totalProgress);
+          }
+        });
+      });
+
+      return await Promise.all(uploadPromises);
     } catch (error) {
-      console.error(
-        "Erreur lors du téléchargement multiple de fichiers:",
-        error
-      );
+      console.error("Multiple upload error:", error);
       throw error;
     }
   };
