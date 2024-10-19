@@ -44,7 +44,7 @@ const MediaSelection: React.FC = () => {
         fileInputRef.current.accept =
           type === MediaType.IMAGE
             ? "image/jpeg, image/png, image/jpg"
-            : "video/mp4";
+            : "video/*";
         fileInputRef.current.multiple = type === MediaType.IMAGE;
         fileInputRef.current.click();
       }
