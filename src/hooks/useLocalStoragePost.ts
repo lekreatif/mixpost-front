@@ -4,7 +4,7 @@ import { useUser } from "./useMe";
 
 export function useLocalStoragePost<T>(key: string, initialValue: T) {
   const { data: userData, isLoading } = useUser();
-  const user = userData ? userData.data : null;
+  const user = userData ? userData.data.data : null;
   const userId = user?.id || "anonymous";
   const fullKey = `user_${userId}_${key}`;
 

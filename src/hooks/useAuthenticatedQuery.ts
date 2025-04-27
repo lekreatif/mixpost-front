@@ -16,7 +16,7 @@ export function useAuthenticatedQuery<TData>(
     ...options,
     enabled:
       (!isAuthLoading &&
-        authData?.data.isAuthenticated &&
+        authData?.data.data?.isAuthenticated &&
         (options?.enabled ?? true)) ??
       false,
   });
@@ -36,10 +36,10 @@ export function useAdminQuery<TData>(
     ...options,
     enabled:
       (!isAuthLoading &&
-        authData?.data.isAuthenticated &&
+        authData?.data.data?.isAuthenticated &&
         (options?.enabled ?? true) &&
         !isUserLoading &&
-        userData?.data.role === USER_ROLE.SUPER_ADMIN) ??
+        userData?.data.data?.role === USER_ROLE.SUPER_ADMIN) ??
       false,
   });
 }

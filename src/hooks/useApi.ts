@@ -15,7 +15,7 @@ export const useSocialAccounts = () => {
   return useQuery({
     queryKey: ["socialAccounts"],
     queryFn: getSocialAccounts,
-    enabled: data?.data.isAuthenticated,
+    enabled: data?.data.data?.isAuthenticated,
     staleTime: 5 * 60 * 1000,
   });
 };

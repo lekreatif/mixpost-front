@@ -11,7 +11,7 @@ export const usePages = () => {
   } = useAuthenticatedQuery("userPages", getMyPages);
 
   return {
-    pages: res ? res.data : null,
+    pages: res ? res.data.data : null,
     isLoading,
     refetch,
     isRefetching,

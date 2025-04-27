@@ -9,13 +9,13 @@ interface PrivateRouteProps {
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
   const location = useLocation();
-  const { data, isLoading } = useIsAuthenticated();
+  const { data: res, isLoading } = useIsAuthenticated();
 
   if (isLoading) {
     return <FullPageLoader />;
   }
 
-  if (!data?.data.isAuthenticated) {
+  if (!res?.data?.data?.isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
